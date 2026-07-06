@@ -113,14 +113,38 @@ enum MemberRole {
   ADMIN
 }
 
+enum PostType {
+  QUESTION
+  DISCUSSION
+  RECOMMENDATION
+  GUIDE
+  REVIEW
+  WARNING
+  NEWS_DISCUSSION
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  REMOVED
+  LOCKED
+}
+
 model Post {
   id          String    @id @default(uuid())
   title       String
   content     String
+  type        PostType  @default(DISCUSSION)
+  slug        String?
+  status      PostStatus @default(PUBLISHED)
   authorId    String
   communityId String?
   upvotes     Int       @default(0)
   downvotes   Int       @default(0)
+  commentCount Int      @default(0)
+  viewCount   Int       @default(0)
+  score       Int       @default(0)
+  publishedAt DateTime? @default(now())
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
@@ -132,17 +156,21 @@ model Post {
 
   @@index([authorId])
   @@index([communityId])
+  @@index([type, status])
+  @@index([score, createdAt])
 }
 
 model Comment {
-  id        String    @id @default(uuid())
-  content   String
-  postId    String
-  authorId  String
-  parentId  String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id         String    @id @default(uuid())
+  content    String
+  postId     String
+  authorId   String
+  parentId   String?
+  score      Int       @default(0)
+  replyCount Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
 
   post      Post      @relation(fields: [postId], references: [id])
   author    User      @relation(fields: [authorId], references: [id])
@@ -152,6 +180,7 @@ model Comment {
 
   @@index([postId])
   @@index([authorId])
+  @@index([parentId])
 }
 
 model Vote {

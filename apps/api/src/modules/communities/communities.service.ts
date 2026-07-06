@@ -221,34 +221,28 @@ export class CommunitiesService {
       throw new NotFoundException('Community not found');
     }
 
-    // Since Content (Posts) module is Milestone 3, return a clean mock feed shell
-    return [
-      {
-        id: 'mock-post-1',
-        title: `Welcome to the ${community.name} community!`,
-        content: `This is a pinned announcement post for the newly created ${community.name} community. Ask questions, start discussions, and enjoy!`,
-        upvotes: 5,
-        downvotes: 0,
-        author: {
-          username: 'system',
-          displayName: 'LowKeyBD System',
-        },
-        commentCount: 0,
-        createdAt: new Date(),
+    return this.prisma.post.findMany({
+      where: {
+        communityId: community.id,
+        deletedAt: null,
+        status: 'PUBLISHED',
       },
-      {
-        id: 'mock-post-2',
-        title: `What are the rules of ${community.name}?`,
-        content: `Please respect others, stay on topic, and help each other out. Local knowledge thrives when we are supportive!`,
-        upvotes: 3,
-        downvotes: 0,
+      include: {
         author: {
-          username: 'system',
-          displayName: 'LowKeyBD System',
+          select: {
+            id: true,
+            username: true,
+            profile: {
+              select: { avatarUrl: true, reputationScore: true },
+            },
+          },
         },
-        commentCount: 2,
-        createdAt: new Date(Date.now() - 3600000), // 1 hour ago
+        _count: {
+          select: { comments: true, votes: true },
+        },
       },
-    ];
+      orderBy: [{ score: 'desc' }, { createdAt: 'desc' }],
+      take: 50,
+    });
   }
 }

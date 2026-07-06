@@ -8,6 +8,7 @@ import { DatabaseModule } from './common/database/database.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
 import { CommunitiesModule } from './modules/communities/communities.module';
+import { ContentModule } from './modules/content/content.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -48,6 +49,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
     IdentityModule,
     ProfilesModule,
     CommunitiesModule,
+    ContentModule,
   ],
   controllers: [AppController],
   providers: [

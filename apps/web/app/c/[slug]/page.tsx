@@ -2,15 +2,18 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../src/features/auth/AuthContext';
-import { CommunityDetail, MockPost } from '../../../src/features/communities/types';
+import { CommunityDetail } from '../../../src/features/communities/types';
+import { Post, POST_TYPE_LABELS, POST_TYPE_COLORS } from '../../../src/features/content/types';
 
 export default function CommunityDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { isAuthenticated } = useAuth();
   const { slug } = React.use(params);
+  const router = useRouter();
 
   const [community, setCommunity] = useState<CommunityDetail | null>(null);
-  const [posts, setPosts] = useState<MockPost[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isActionLoading, setIsActionLoading] = useState(false);
@@ -98,8 +101,8 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
       <div className="container error-container">
         <h2>Failed to load community</h2>
         <p>{error || 'This community does not exist or has been removed.'}</p>
-        <Link href="/communities" className="back-link">
-          &larr; Back to Directory
+        <Link href="/communities" className="back-link-plain">
+          ← Back to Directory
         </Link>
       </div>
     );
@@ -167,6 +170,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
           font-size: 2.2rem;
           color: #4a5568;
           overflow: hidden;
+          flex-shrink: 0;
         }
         .comm-avatar-img {
           width: 100%;
@@ -202,6 +206,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
         .action-section {
           display: flex;
           gap: 15px;
+          align-items: center;
         }
         .join-btn {
           padding: 12px 30px;
@@ -232,6 +237,26 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
           box-shadow: none;
           transform: none;
         }
+        .create-post-btn {
+          padding: 12px 24px;
+          border-radius: 8px;
+          font-weight: 700;
+          font-size: 0.95rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          border: 2px solid #FF416C;
+          background: transparent;
+          color: #FF416C;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .create-post-btn:hover {
+          background: #FF416C;
+          color: white;
+          transform: translateY(-1px);
+        }
         .content-grid {
           display: grid;
           grid-template-columns: 2fr 1fr;
@@ -243,12 +268,18 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
             grid-template-columns: 1fr;
           }
         }
+        .feed-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 20px;
+        }
         .feed-section h2 {
           font-size: 1.3rem;
           font-weight: 800;
-          margin-bottom: 20px;
           color: #1a202c;
           letter-spacing: -0.01em;
+          margin: 0;
         }
         .post-card {
           background: #fff;
@@ -257,40 +288,64 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
           padding: 24px;
           margin-bottom: 20px;
           box-shadow: 0 4px 12px rgba(0,0,0,0.01);
-          transition: border-color 0.2s ease;
+          transition: all 0.2s ease;
+          text-decoration: none;
+          display: block;
+          cursor: pointer;
         }
         .post-card:hover {
           border-color: #cbd5e0;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(0,0,0,0.05);
         }
         .post-meta {
           font-size: 0.8rem;
           color: #a0aec0;
           margin-bottom: 10px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .post-type-badge {
+          padding: 2px 8px;
+          border-radius: 20px;
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: white;
         }
         .post-author {
           font-weight: 600;
           color: #4a5568;
         }
         .post-title {
-          font-size: 1.15rem;
+          font-size: 1.1rem;
           font-weight: 700;
           color: #1a202c;
           margin-bottom: 10px;
           line-height: 1.4;
         }
-        .post-content {
-          font-size: 0.95rem;
+        .post-excerpt {
+          font-size: 0.92rem;
           color: #4a5568;
           line-height: 1.6;
-          margin-bottom: 20px;
+          margin-bottom: 16px;
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
         }
         .post-footer {
           display: flex;
-          gap: 20px;
+          gap: 16px;
           font-size: 0.85rem;
           color: #718096;
           border-top: 1px solid #f7fafc;
-          padding-top: 15px;
+          padding-top: 12px;
+        }
+        .post-footer span {
+          display: flex;
+          align-items: center;
+          gap: 4px;
         }
         .sidebar {
           background: #fff;
@@ -329,9 +384,15 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
           align-items: center;
           gap: 5px;
           transition: background 0.2s ease;
+          text-decoration: none;
         }
         .back-link:hover {
           background: rgba(0, 0, 0, 0.6);
+        }
+        .back-link-plain {
+          color: #FF416C;
+          font-weight: 600;
+          text-decoration: underline;
         }
         .role-badge {
           padding: 3px 8px;
@@ -346,6 +407,20 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
           max-width: 600px;
           margin: 100px auto;
           text-align: center;
+          padding: 20px;
+        }
+        .empty-state {
+          text-align: center;
+          padding: 50px 40px;
+          background: #fff;
+          border: 2px dashed #e2e8f0;
+          border-radius: 12px;
+          color: #718096;
+        }
+        .empty-state h3 {
+          font-size: 1.1rem;
+          margin-bottom: 10px;
+          color: #4a5568;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -365,7 +440,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
           .stats, .post-meta, .post-footer, .sidebar-desc {
             color: #a0aec0;
           }
-          .post-content, .post-author {
+          .post-excerpt, .post-author {
             color: #e2e8f0;
           }
           .join-btn.leave {
@@ -377,12 +452,25 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
             background: rgba(43, 108, 176, 0.15);
             color: #90cdf4;
           }
+          .post-footer {
+            border-top-color: #222;
+          }
+          .sidebar-title {
+            border-bottom-color: #222;
+          }
+          .empty-state {
+            background: #111;
+            border-color: #333;
+          }
+          .empty-state h3 {
+            color: #e2e8f0;
+          }
         }
       `}} />
 
       <div className="banner">
         <Link href="/communities" className="back-link">
-          &larr; Communities
+          ← Communities
         </Link>
         <div className="banner-overlay"></div>
       </div>
@@ -418,6 +506,14 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
           </div>
 
           <div className="action-section">
+            {isAuthenticated && isJoined && (
+              <Link
+                href={`/posts/create?communityId=${community.id}&communitySlug=${slug}`}
+                className="create-post-btn"
+              >
+                ✍️ Create Post
+              </Link>
+            )}
             <button
               onClick={handleJoinLeave}
               disabled={isActionLoading}
@@ -434,23 +530,50 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
 
         <div className="content-grid">
           <div className="feed-section">
-            <h2>Community Feed</h2>
+            <div className="feed-header">
+              <h2>Community Feed</h2>
+            </div>
 
             {posts.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px', background: '#fff', border: '1px solid #eaeaea', borderRadius: '12px', color: '#718096' }}>
-                No posts in this community yet.
+              <div className="empty-state">
+                <div style={{ fontSize: '2rem', marginBottom: '12px' }}>📭</div>
+                <h3>No posts yet</h3>
+                <p>Be the first to start a discussion in this community!</p>
+                {isAuthenticated && isJoined && (
+                  <Link
+                    href={`/posts/create?communityId=${community.id}&communitySlug=${slug}`}
+                    className="create-post-btn"
+                    style={{ marginTop: '16px', display: 'inline-flex' }}
+                  >
+                    ✍️ Write the first post
+                  </Link>
+                )}
               </div>
             ) : (
               posts.map((post) => (
-                <div className="post-card" key={post.id}>
+                <div
+                  key={post.id}
+                  className="post-card"
+                  onClick={() => router.push(`/posts/${post.id}`)}
+                >
                   <div className="post-meta">
-                    Posted by <span className="post-author">u/{post.author.username}</span> &bull; {new Date(post.createdAt).toLocaleDateString()}
+                    <span
+                      className="post-type-badge"
+                      style={{ backgroundColor: POST_TYPE_COLORS[post.type] }}
+                    >
+                      {POST_TYPE_LABELS[post.type]}
+                    </span>
+                    <span>
+                      Posted by <span className="post-author">u/{post.author.username}</span>
+                      {' '}· {new Date(post.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
                   <h3 className="post-title">{post.title}</h3>
-                  <p className="post-content">{post.content}</p>
+                  <p className="post-excerpt">{post.content}</p>
                   <div className="post-footer">
                     <span>🔺 {post.upvotes} Upvotes</span>
                     <span>💬 {post.commentCount} Comments</span>
+                    <span>👁 {post.viewCount} Views</span>
                   </div>
                 </div>
               ))
@@ -462,6 +585,16 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
             <p className="sidebar-desc">
               {community.description || 'Welcome to this local Bangladesh knowledge hub! Start discussions and learn together.'}
             </p>
+            {!isAuthenticated && (
+              <div style={{ marginTop: '20px' }}>
+                <p style={{ fontSize: '0.85rem', color: '#a0aec0', marginBottom: '10px' }}>
+                  Join to participate in discussions
+                </p>
+                <Link href="/register" className="create-post-btn" style={{ width: '100%', justifyContent: 'center', boxSizing: 'border-box', textAlign: 'center' }}>
+                  Sign up free
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
