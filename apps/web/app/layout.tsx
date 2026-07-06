@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 };
 
 import { AuthProvider } from '../src/features/auth/AuthContext';
+import Navbar from '../src/components/Navbar';
 
 export default function RootLayout({
   children,
@@ -27,6 +28,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider>
+          <Navbar />
           {children}
         </AuthProvider>
       </body>

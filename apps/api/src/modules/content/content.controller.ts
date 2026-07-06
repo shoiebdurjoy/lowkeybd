@@ -29,6 +29,12 @@ export class ContentController {
 
   // ---- POSTS ----
 
+  @Public()
+  @Get('posts')
+  getGlobalFeed() {
+    return this.contentService.getGlobalFeed();
+  }
+
   @Post('posts')
   createPost(@Request() req: RequestWithUser, @Body() dto: CreatePostDto) {
     return this.contentService.createPost(req.user.userId, dto);
