@@ -10,12 +10,15 @@ import { ProfilesModule } from './modules/profiles/profiles.module';
 import { CommunitiesModule } from './modules/communities/communities.module';
 import { ContentModule } from './modules/content/content.module';
 import { VotingModule } from './modules/voting/voting.module';
+import { SearchModule } from './modules/search/search.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: envValidationSchema,
@@ -52,6 +55,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
     CommunitiesModule,
     ContentModule,
     VotingModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [

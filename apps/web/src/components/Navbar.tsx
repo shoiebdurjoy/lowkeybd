@@ -1,15 +1,58 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../features/auth/AuthContext';
 
 export default function Navbar() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<Array<{ text: string; type: 'post' | 'community'; id: string; slug?: string }>>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const isActive = (path: string) => pathname === path;
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const res = await fetch(`http://localhost:3001/api/v1/search/suggestions?q=${encodeURIComponent(searchQuery)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSuggestions(data.suggestions || []);
+        }
+      } catch (err) {
+        console.error('Error fetching suggestions:', err);
+      }
+    }, 200);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery]);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      setShowSuggestions(false);
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
+  const handleSuggestionClick = (sug: { text: string; type: 'post' | 'community'; id: string; slug?: string }) => {
+    setSearchQuery('');
+    setShowSuggestions(false);
+    if (sug.type === 'community' && sug.slug) {
+      router.push(`/c/${sug.slug}`);
+    } else {
+      router.push(`/posts/${sug.id}`);
+    }
+  };
 
   return (
     <header className="navbar-header">
@@ -213,6 +256,83 @@ export default function Navbar() {
             color: #fc8181;
           }
         }
+
+        .navbar-search-wrapper {
+          position: relative;
+          width: 260px;
+          margin: 0 16px;
+        }
+
+        .navbar-search-input {
+          width: 100%;
+          padding: 8px 16px;
+          border-radius: 20px;
+          border: 1px solid #edf2f7;
+          background: #edf2f7;
+          font-size: 0.88rem;
+          font-weight: 500;
+          outline: none;
+          transition: all 0.2s ease;
+        }
+
+        .navbar-search-input:focus {
+          background: white;
+          border-color: #cbd5e0;
+          box-shadow: 0 0 0 3px rgba(255, 65, 108, 0.15);
+        }
+
+        .search-suggestions-dropdown {
+          position: absolute;
+          top: 110%;
+          left: 0;
+          right: 0;
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          max-height: 250px;
+          overflow-y: auto;
+          z-index: 1100;
+        }
+
+        .suggestion-item {
+          padding: 10px 16px;
+          font-size: 0.82rem;
+          font-weight: 600;
+          color: #4a5568;
+          cursor: pointer;
+          border-bottom: 1px solid #f7fafc;
+          transition: background 0.15s;
+          text-align: left;
+        }
+
+        .suggestion-item:hover {
+          background: #f7fafc;
+          color: #FF416C;
+        }
+
+        @media (prefers-color-scheme: dark) {
+          .navbar-search-input {
+            background: #1a1a1a;
+            border-color: #2d3748;
+            color: white;
+          }
+          .navbar-search-input:focus {
+            background: #0a0a0a;
+            border-color: #4a5568;
+          }
+          .search-suggestions-dropdown {
+            background: #111;
+            border-color: #222;
+          }
+          .suggestion-item {
+            color: #cbd5e0;
+            border-bottom-color: #1a1a1a;
+          }
+          .suggestion-item:hover {
+            background: #1a1a1a;
+          }
+        }
       `}} />
       <div className="navbar-container">
         <Link href="/" className="navbar-logo">
@@ -221,6 +341,32 @@ export default function Navbar() {
 
         {!isLoading && (
           <>
+            <div className="navbar-search-wrapper">
+              <input
+                type="text"
+                placeholder="Search LowKeyBD..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                className="navbar-search-input"
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="search-suggestions-dropdown">
+                  {suggestions.map((sug) => (
+                    <div
+                      key={sug.id + sug.type}
+                      onClick={() => handleSuggestionClick(sug)}
+                      className="suggestion-item"
+                    >
+                      {sug.type === 'community' ? '🏢 ' : '📝 '}
+                      {sug.text}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <nav>
               <ul className="navbar-menu">
                 <li>

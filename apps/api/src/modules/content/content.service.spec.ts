@@ -2,6 +2,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ContentService } from './content.service';
 import { PrismaService } from '../../common/database/prisma.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PostType, PostStatus } from '@repo/database';
 import {
   NotFoundException,
@@ -36,6 +37,12 @@ describe('ContentService', () => {
       providers: [
         ContentService,
         { provide: PrismaService, useValue: mockPrisma },
+        {
+          provide: EventEmitter2,
+          useValue: {
+            emit: jest.fn(),
+          },
+        },
       ],
     }).compile();
 

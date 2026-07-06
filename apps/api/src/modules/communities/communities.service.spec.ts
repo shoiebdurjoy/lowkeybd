@@ -2,6 +2,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CommunitiesService } from './communities.service';
 import { PrismaService } from '../../common/database/prisma.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   ConflictException,
   NotFoundException,
@@ -37,6 +38,12 @@ describe('CommunitiesService', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: EventEmitter2,
+          useValue: {
+            emit: jest.fn(),
+          },
         },
       ],
     }).compile();

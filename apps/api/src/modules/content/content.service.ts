@@ -57,9 +57,14 @@ const COMMENT_INCLUDE = {
   },
 };
 
+import { EventEmitter2 } from '@nestjs/event-emitter';
+
 @Injectable()
 export class ContentService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   // ---- POSTS ----
 
@@ -86,6 +91,8 @@ export class ContentService {
       },
       include: POST_INCLUDE,
     });
+
+    this.eventEmitter.emit('post.created', { postId: post.id });
 
     return post;
   }
@@ -140,7 +147,7 @@ export class ContentService {
       throw new ForbiddenException('You can only edit your own posts');
     }
 
-    return this.prisma.post.update({
+    const updated = await this.prisma.post.update({
       where: { id },
       data: {
         ...(dto.title !== undefined && { title: dto.title }),
@@ -149,6 +156,10 @@ export class ContentService {
       },
       include: POST_INCLUDE,
     });
+
+    this.eventEmitter.emit('post.updated', { postId: updated.id });
+
+    return updated;
   }
 
   async deletePost(id: string, userId: string) {
@@ -169,6 +180,8 @@ export class ContentService {
       where: { id },
       data: { deletedAt: new Date(), status: PostStatus.REMOVED },
     });
+
+    this.eventEmitter.emit('post.deleted', { postId: id });
 
     return { message: 'Post deleted successfully' };
   }

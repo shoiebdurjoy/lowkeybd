@@ -9,10 +9,14 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { CreateCommunityDto } from './dto/create-community.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
 import { MemberRole } from '@repo/database';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class CommunitiesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
+  ) {}
 
   async create(userId: string, dto: CreateCommunityDto) {
     const existing = await this.prisma.community.findFirst({
@@ -46,6 +50,8 @@ export class CommunitiesService {
         role: MemberRole.ADMIN,
       },
     });
+
+    this.eventEmitter.emit('community.created', { communityId: community.id });
 
     return community;
   }
@@ -122,7 +128,7 @@ export class CommunitiesService {
       );
     }
 
-    return this.prisma.community.update({
+    const updated = await this.prisma.community.update({
       where: { id: community.id },
       data: {
         ...(dto.description !== undefined && { description: dto.description }),
@@ -130,6 +136,10 @@ export class CommunitiesService {
         ...(dto.bannerUrl !== undefined && { bannerUrl: dto.bannerUrl }),
       },
     });
+
+    this.eventEmitter.emit('community.updated', { communityId: updated.id });
+
+    return updated;
   }
 
   async join(slug: string, userId: string) {
