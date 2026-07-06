@@ -33,5 +33,6 @@ import { MailerModule } from '@nestjs-modules/mailer';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
+  exports: [JwtModule],
 })
 export class IdentityModule {}

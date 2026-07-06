@@ -28,6 +28,10 @@ model User {
   comments      Comment[]
   votes         Vote[]
   communities   CommunityMember[]
+
+  notificationsReceived  Notification[]          @relation("UserNotifications")
+  notificationsTriggered Notification[]          @relation("ActorNotifications")
+  notificationPreference NotificationPreference?
 }
 
 model Profile {
@@ -197,4 +201,42 @@ model Vote {
 
   @@unique([userId, postId])
   @@unique([userId, commentId])
+}
+
+enum NotificationType {
+  NEW_COMMENT
+  NEW_REPLY
+  MENTION
+  MODERATION
+}
+
+model Notification {
+  id         String           @id @default(uuid())
+  userId     String
+  actorId    String?
+  type       NotificationType
+  title      String
+  body       String
+  entityType String
+  entityId   String
+  readAt     DateTime?
+  createdAt  DateTime         @default(now())
+
+  user       User             @relation("UserNotifications", fields: [userId], references: [id])
+  actor      User?            @relation("ActorNotifications", fields: [actorId], references: [id])
+
+  @@index([userId, readAt, createdAt])
+}
+
+model NotificationPreference {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  newCommentInApp Boolean  @default(true)
+  newCommentEmail Boolean  @default(true)
+  newReplyInApp   Boolean  @default(true)
+  newReplyEmail   Boolean  @default(true)
+  newMentionInApp Boolean  @default(true)
+  newMentionEmail Boolean  @default(true)
+
+  user            User     @relation(fields: [userId], references: [id])
 }

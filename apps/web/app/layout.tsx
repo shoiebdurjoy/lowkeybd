@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 };
 
 import { AuthProvider } from '../src/features/auth/AuthContext';
+import { NotificationsProvider } from '../src/features/notifications/NotificationsContext';
 import Navbar from '../src/components/Navbar';
 
 export default function RootLayout({
@@ -28,8 +29,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider>
-          <Navbar />
-          {children}
+          <NotificationsProvider>
+            <Navbar />
+            {children}
+          </NotificationsProvider>
         </AuthProvider>
       </body>
     </html>

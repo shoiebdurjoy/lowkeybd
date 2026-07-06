@@ -4,9 +4,11 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../features/auth/AuthContext';
+import { useNotifications } from '../features/notifications/NotificationsContext';
 
 export default function Navbar() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { unreadCount } = useNotifications();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -129,6 +131,23 @@ export default function Navbar() {
         .navbar-link.active {
           color: #FF416C;
           background: rgba(255, 65, 108, 0.08);
+        }
+
+        .notification-bell-link {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .notification-badge {
+          background: #FF416C;
+          color: white;
+          border-radius: 10px;
+          padding: 2px 6px;
+          font-size: 0.72rem;
+          font-weight: 800;
+          line-height: 1;
         }
 
         .navbar-actions {
@@ -407,6 +426,9 @@ export default function Navbar() {
                   </span>
                   <Link href={`/${user?.username}`} className="navbar-link">
                     My Profile
+                  </Link>
+                  <Link href="/notifications" className={`navbar-link notification-bell-link ${isActive('/notifications') ? 'active' : ''}`}>
+                    🔔 {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>} Notifications
                   </Link>
                   <button onClick={logout} className="btn-auth btn-logout">
                     Logout

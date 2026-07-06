@@ -324,6 +324,15 @@ export class ContentService {
       });
     }
 
+    this.eventEmitter.emit('post.updated', { postId });
+    this.eventEmitter.emit('comment.created', {
+      commentId: comment.id,
+      postId: comment.postId,
+      authorId: comment.authorId,
+      parentId: comment.parentId,
+      content: comment.content,
+    });
+
     return comment;
   }
 
@@ -340,13 +349,17 @@ export class ContentService {
       throw new ForbiddenException('You can only edit your own comments');
     }
 
-    return this.prisma.comment.update({
+    const updated = await this.prisma.comment.update({
       where: { id },
       data: {
         ...(dto.content !== undefined && { content: dto.content }),
       },
       include: COMMENT_INCLUDE,
     });
+
+    this.eventEmitter.emit('post.updated', { postId: updated.postId });
+
+    return updated;
   }
 
   async deleteComment(id: string, userId: string) {
@@ -373,6 +386,8 @@ export class ContentService {
       where: { id: comment.postId },
       data: { commentCount: { decrement: 1 } },
     });
+
+    this.eventEmitter.emit('post.updated', { postId: comment.postId });
 
     return { message: 'Comment deleted successfully' };
   }
