@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Post, POST_TYPE_LABELS, POST_TYPE_COLORS } from '../../src/features/content/types';
@@ -10,6 +10,7 @@ interface SearchCommunity {
   name: string;
   slug: string;
   description: string;
+  avatarUrl?: string;
   createdAt: string;
 }
 
@@ -23,36 +24,65 @@ function SearchPageContent() {
   const [hubs, setHubs] = useState<SearchCommunity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deepSearch, setDeepSearch] = useState(false);
 
-  useEffect(() => {
-    async function performSearch() {
-      if (!query.trim()) {
-        setPosts([]);
-        setHubs([]);
-        setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-      setError('');
-
-      try {
-        const res = await fetch(`http://localhost:3001/api/v1/search?q=${encodeURIComponent(query)}`);
-        if (!res.ok) {
-          throw new Error('Search failed');
-        }
-        const data = await res.json();
-        setPosts(data.posts || []);
-        setHubs(data.communities || []);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'An error occurred during search');
-      } finally {
-        setIsLoading(false);
-      }
+  const performSearch = useCallback(async () => {
+    if (!query.trim()) {
+      setPosts([]);
+      setHubs([]);
+      setIsLoading(false);
+      return;
     }
 
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const deepParam = deepSearch ? '&deep=true' : '';
+      const res = await fetch(
+        `http://localhost:3001/api/v1/search?q=${encodeURIComponent(query)}${deepParam}`,
+      );
+      if (!res.ok) {
+        throw new Error('Search failed');
+      }
+      const data = await res.json();
+      setPosts(Array.isArray(data.posts) ? data.posts : []);
+      setHubs(Array.isArray(data.communities) ? data.communities : []);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred during search');
+      setPosts([]);
+      setHubs([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [query, deepSearch]);
+
+  useEffect(() => {
     void performSearch();
-  }, [query]);
+  }, [performSearch]);
+
+  // Helper: safe author name
+  const getAuthorName = (post: Post): string => {
+    if (post.author?.username) return post.author.username;
+    return '[deleted user]';
+  };
+
+  // Helper: safe community slug
+  const getCommunitySlug = (post: Post): string | null => {
+    return post.community?.slug || null;
+  };
+
+  if (!query.trim()) {
+    return (
+      <div className="search-container">
+        <div className="empty-state">
+          <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🔍</div>
+          <h3>Start searching LowKeyBD</h3>
+          <p>Type a keyword in the search bar above to find posts and hubs.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="search-container">
@@ -61,8 +91,29 @@ function SearchPageContent() {
           Search results for: <span style={{ color: '#FF416C' }}>&ldquo;{query}&rdquo;</span>
         </h1>
         <p className="search-subtitle">
-          Found {posts.length} posts and {hubs.length} hubs
+          Found {posts.length} post{posts.length !== 1 ? 's' : ''} and {hubs.length} hub{hubs.length !== 1 ? 's' : ''}
         </p>
+      </div>
+
+      {/* Deep Search Toggle */}
+      <div className="deep-search-toggle">
+        <label className="toggle-label">
+          <input
+            type="checkbox"
+            checked={deepSearch}
+            onChange={(e) => setDeepSearch(e.target.checked)}
+            className="toggle-checkbox"
+          />
+          <span className="toggle-slider" />
+          <span className="toggle-text">
+            {deepSearch ? '🔬 Deep Search' : '⚡ Normal Search'}
+          </span>
+        </label>
+        <span className="toggle-hint">
+          {deepSearch
+            ? 'Searching titles, content, comments, and replies'
+            : 'Searching titles and hub names only'}
+        </span>
       </div>
 
       {error && <div className="error-msg">⚠️ {error}</div>}
@@ -83,14 +134,25 @@ function SearchPageContent() {
       </div>
 
       {isLoading ? (
-        <div className="loading-state">Searching LowKeyBD database...</div>
+        <div className="loading-state">
+          <div className="loading-spinner" />
+          <span>Searching LowKeyBD database...</span>
+        </div>
       ) : activeTab === 'posts' ? (
         <div className="results-list">
           {posts.length === 0 ? (
             <div className="empty-state">
               <div style={{ fontSize: '2rem', marginBottom: '12px' }}>🔍</div>
               <h3>No posts match your search</h3>
-              <p>Try using different keywords or search for a hub instead.</p>
+              <p>Try using different keywords or enable &ldquo;Deep Search&rdquo; to search inside post content and comments.</p>
+              {!deepSearch && (
+                <button
+                  className="try-deep-btn"
+                  onClick={() => setDeepSearch(true)}
+                >
+                  🔬 Try Deep Search
+                </button>
+              )}
             </div>
           ) : (
             posts.map((post) => (
@@ -100,29 +162,33 @@ function SearchPageContent() {
                 onClick={() => router.push(`/posts/${post.id}`)}
               >
                 <div className="post-meta">
-                  <span
-                    className="post-type-badge"
-                    style={{ backgroundColor: POST_TYPE_COLORS[post.type] }}
-                  >
-                    {POST_TYPE_LABELS[post.type]}
-                  </span>
-                  {post.community?.slug && (
+                  {post.type && POST_TYPE_COLORS[post.type] && (
+                    <span
+                      className="post-type-badge"
+                      style={{ backgroundColor: POST_TYPE_COLORS[post.type] }}
+                    >
+                      {POST_TYPE_LABELS[post.type] || post.type}
+                    </span>
+                  )}
+                  {getCommunitySlug(post) && (
                     <Link
-                      href={`/c/${post.community.slug}`}
+                      href={`/c/${getCommunitySlug(post)}`}
                       className="post-community"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      c/{post.community.slug}
+                      c/{getCommunitySlug(post)}
                     </Link>
                   )}
                   <span>
-                    Posted by <span className="post-author">u/{post.author.username}</span> &bull; {new Date(post.createdAt).toLocaleDateString()}
+                    Posted by <span className="post-author">u/{getAuthorName(post)}</span> &bull;{' '}
+                    {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''}
                   </span>
                 </div>
-                <h3 className="post-title">{post.title}</h3>
-                <p className="post-excerpt">{post.content}</p>
+                <h3 className="post-title">{post.title || '[Untitled Post]'}</h3>
+                {post.content && <p className="post-excerpt">{post.content}</p>}
                 <div className="post-footer">
-                  <span>🔺 {post.score} score</span>
+                  <span>🔺 {post.score ?? 0} score</span>
+                  <span>💬 {post.commentCount ?? 0} comments</span>
                   <span>👁 View Post</span>
                 </div>
               </div>
@@ -148,7 +214,9 @@ function SearchPageContent() {
                 onClick={() => router.push(`/c/${hub.slug}`)}
               >
                 <h3 className="hub-name">c/{hub.slug}</h3>
-                <p className="hub-description">{hub.description || 'Welcome to this Bangladeshi knowledge hub!'}</p>
+                <p className="hub-description">
+                  {hub.description || 'Welcome to this community hub!'}
+                </p>
                 <div className="hub-footer">
                   <span>🏢 View Hub →</span>
                 </div>
@@ -178,7 +246,7 @@ export default function SearchPage() {
         }
 
         .search-header {
-          margin-bottom: 32px;
+          margin-bottom: 24px;
         }
 
         .search-title {
@@ -192,6 +260,74 @@ export default function SearchPage() {
         .search-subtitle {
           font-size: 0.95rem;
           color: #718096;
+          font-weight: 500;
+        }
+
+        /* Deep Search Toggle */
+        .deep-search-toggle {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 24px;
+          padding: 14px 20px;
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+
+        .toggle-label {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          cursor: pointer;
+          user-select: none;
+        }
+
+        .toggle-checkbox {
+          display: none;
+        }
+
+        .toggle-slider {
+          width: 44px;
+          height: 24px;
+          background: #cbd5e0;
+          border-radius: 12px;
+          position: relative;
+          transition: background 0.3s;
+          flex-shrink: 0;
+        }
+
+        .toggle-slider::before {
+          content: '';
+          position: absolute;
+          top: 3px;
+          left: 3px;
+          width: 18px;
+          height: 18px;
+          background: #fff;
+          border-radius: 50%;
+          transition: transform 0.3s;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+
+        .toggle-checkbox:checked + .toggle-slider {
+          background: linear-gradient(135deg, #FF4B2B 0%, #FF416C 100%);
+        }
+
+        .toggle-checkbox:checked + .toggle-slider::before {
+          transform: translateX(20px);
+        }
+
+        .toggle-text {
+          font-weight: 700;
+          font-size: 0.9rem;
+          color: #1a202c;
+        }
+
+        .toggle-hint {
+          font-size: 0.82rem;
+          color: #a0aec0;
           font-weight: 500;
         }
 
@@ -353,6 +489,11 @@ export default function SearchPage() {
           color: #718096;
         }
 
+        .empty-state h3 {
+          color: #2d3748;
+          margin-bottom: 8px;
+        }
+
         .create-hub-btn {
           margin-top: 16px;
           display: inline-flex;
@@ -362,6 +503,23 @@ export default function SearchPage() {
           border-radius: 8px;
           font-weight: 700;
           text-decoration: none;
+        }
+
+        .try-deep-btn {
+          margin-top: 16px;
+          display: inline-flex;
+          padding: 10px 20px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          border-radius: 8px;
+          font-weight: 700;
+          border: none;
+          cursor: pointer;
+          transition: transform 0.15s;
+        }
+
+        .try-deep-btn:hover {
+          transform: scale(1.03);
         }
 
         .error-msg {
@@ -379,24 +537,44 @@ export default function SearchPage() {
           padding: 80px;
           color: #718096;
           font-weight: 500;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .loading-spinner {
+          width: 32px;
+          height: 32px;
+          border: 3px solid #e2e8f0;
+          border-top: 3px solid #FF416C;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
 
         @media (prefers-color-scheme: dark) {
           .search-wrapper {
             background: #0a0a0a;
           }
-          .post-card, .hub-card, .empty-state {
+          .post-card, .hub-card, .empty-state, .deep-search-toggle {
             background: #111;
             border-color: #222;
           }
-          .search-title, .tab-btn.active, .post-title, .hub-name {
+          .search-title, .tab-btn.active, .post-title, .hub-name, .toggle-text {
             color: #fff;
+          }
+          .empty-state h3 {
+            color: #e2e8f0;
           }
           .post-community {
             background: #1a1a1a;
             color: #cbd5e0;
           }
-          .post-meta, .post-footer, .search-subtitle {
+          .post-meta, .post-footer, .search-subtitle, .toggle-hint {
             color: #a0aec0;
           }
           .post-excerpt, .hub-description {

@@ -36,10 +36,10 @@ describe('SearchController', () => {
     it('should delegate search query to service', async () => {
       mockSearchService.search.mockResolvedValue({ posts: [] });
 
-      const result = await controller.search('query', 'posts');
+      const result = await controller.search('query', 'posts', undefined);
 
       expect(result).toEqual({ posts: [] });
-      expect(service.search).toHaveBeenCalledWith('query', 'posts');
+      expect(service.search).toHaveBeenCalledWith('query', 'posts', false);
     });
   });
 

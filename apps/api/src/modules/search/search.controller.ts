@@ -11,8 +11,9 @@ export class SearchController {
   search(
     @Query('q') query: string,
     @Query('type') type?: 'posts' | 'communities',
+    @Query('deep') deep?: string,
   ) {
-    return this.searchService.search(query || '', type);
+    return this.searchService.search(query || '', type, deep === 'true');
   }
 
   @Public()

@@ -54,6 +54,7 @@ describe('SearchService', () => {
         score: 5,
         author: { username: 'user1' },
         community: { name: 'Com1', slug: 'com1' },
+        comments: [],
         createdAt: new Date('2026-07-06T12:00:00Z'),
       };
       mockPrisma.post.findUnique.mockResolvedValue(mockPost);
@@ -74,6 +75,7 @@ describe('SearchService', () => {
       mockSearchIndex.search.mockResolvedValue({
         hits: [{ id: 'p1', title: 'Tech' }],
       });
+      mockPrisma.post.findMany.mockResolvedValue([{ id: 'p1', title: 'Tech' }]);
 
       const result = await service.search('Tech', 'posts');
 

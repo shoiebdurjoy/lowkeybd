@@ -1,8 +1,26 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { Meilisearch, Index } from 'meilisearch';
 import { PrismaService } from '../../common/database/prisma.service';
 import { OnEvent } from '@nestjs/event-emitter';
+
+const POST_INCLUDE = {
+  author: {
+    select: {
+      id: true,
+      username: true,
+      profile: {
+        select: { avatarUrl: true, reputationScore: true },
+      },
+    },
+  },
+  community: {
+    select: { id: true, name: true, slug: true, avatarUrl: true },
+  },
+  _count: {
+    select: { comments: true, votes: true },
+  },
+};
 
 @Injectable()
 export class SearchService implements OnModuleInit {
@@ -26,11 +44,11 @@ export class SearchService implements OnModuleInit {
       await this.postsIndex.updateSettings({
         searchableAttributes: [
           'title',
-          'content',
-          'authorName',
           'communityName',
           'communitySlug',
-          'type',
+          'content',
+          'comments',
+          'authorName',
         ],
         filterableAttributes: ['type', 'communitySlug'],
         rankingRules: [
@@ -41,6 +59,13 @@ export class SearchService implements OnModuleInit {
           'sort',
           'exactness',
         ],
+        typoTolerance: {
+          enabled: true,
+          minWordSizeForTypos: {
+            oneTypo: 4,
+            twoTypos: 7,
+          },
+        },
       });
 
       // Configure settings for communities
@@ -54,9 +79,18 @@ export class SearchService implements OnModuleInit {
           'sort',
           'exactness',
         ],
+        typoTolerance: {
+          enabled: true,
+          minWordSizeForTypos: {
+            oneTypo: 4,
+            twoTypos: 7,
+          },
+        },
       });
 
-      this.logger.log('Meilisearch indexes initialized successfully');
+      this.logger.log(
+        'Meilisearch indexes initialized successfully with custom ranking & typo settings',
+      );
     } catch (err: unknown) {
       this.logger.error('Failed to initialize Meilisearch indexes', err);
     }
@@ -70,12 +104,31 @@ export class SearchService implements OnModuleInit {
       include: {
         author: true,
         community: true,
+        comments: {
+          where: { deletedAt: null },
+          select: {
+            content: true,
+            replies: {
+              where: { deletedAt: null },
+              select: { content: true },
+            },
+          },
+        },
       },
     });
 
     if (!post) {
+      await this.removePostFromIndex(postId).catch(() => {});
       return;
     }
+
+    // Compile comments and replies into a single string for deep search
+    const commentsText = post.comments
+      .map((c) => {
+        const repliesText = c.replies.map((r) => r.content).join(' ');
+        return `${c.content} ${repliesText}`;
+      })
+      .join(' ');
 
     await this.postsIndex.addDocuments([
       {
@@ -87,6 +140,7 @@ export class SearchService implements OnModuleInit {
         authorName: post.author.username,
         communityName: post.community?.name || null,
         communitySlug: post.community?.slug || null,
+        comments: commentsText,
         createdAt: post.createdAt.toISOString(),
       },
     ]);
@@ -98,6 +152,7 @@ export class SearchService implements OnModuleInit {
     });
 
     if (!community) {
+      await this.removeCommunityFromIndex(communityId).catch(() => {});
       return;
     }
 
@@ -172,32 +227,68 @@ export class SearchService implements OnModuleInit {
 
   // --- SEARCH & SUGGESTION METHODS ---
 
-  async search(query: string, type?: 'posts' | 'communities') {
+  async search(query: string, type?: 'posts' | 'communities', deep = false) {
+    const postSearchOptions: any = { limit: 20 };
+    if (!deep) {
+      // Normal search: restrict search to title, community name, and community slug
+      postSearchOptions.attributesToSearchOn = [
+        'title',
+        'communityName',
+        'communitySlug',
+      ];
+    }
+
     if (!type || type === 'posts') {
-      const postsRes = await this.postsIndex.search(query, {
-        limit: 20,
+      const postsRes = await this.postsIndex.search(query, postSearchOptions);
+      const postIds = postsRes.hits.map((hit) => hit.id as string);
+
+      // Query from Postgres, preserving Meilisearch relevance order
+      const posts = await this.prisma.post.findMany({
+        where: { id: { in: postIds }, deletedAt: null },
+        include: POST_INCLUDE,
       });
+
+      const postsMap = new Map(posts.map((p) => [p.id, p]));
+      const sortedPosts = postIds
+        .map((id: string) => postsMap.get(id))
+        .filter((p) => !!p);
 
       if (type === 'posts') {
-        return { posts: postsRes.hits };
+        return { posts: sortedPosts };
       }
 
-      const commsRes = await this.communitiesIndex.search(query, {
-        limit: 10,
+      const commsRes = await this.communitiesIndex.search(query, { limit: 10 });
+      const commIds = commsRes.hits.map((hit) => hit.id as string);
+
+      const communities = await this.prisma.community.findMany({
+        where: { id: { in: commIds }, deletedAt: null },
       });
 
+      const commMap = new Map(communities.map((c) => [c.id, c]));
+      const sortedComms = commIds
+        .map((id: string) => commMap.get(id))
+        .filter((c) => !!c);
+
       return {
-        posts: postsRes.hits,
-        communities: commsRes.hits,
+        posts: sortedPosts,
+        communities: sortedComms,
       };
     }
 
-    const commsRes = await this.communitiesIndex.search(query, {
-      limit: 20,
+    const commsRes = await this.communitiesIndex.search(query, { limit: 20 });
+    const commIds = commsRes.hits.map((hit) => hit.id as string);
+
+    const communities = await this.prisma.community.findMany({
+      where: { id: { in: commIds }, deletedAt: null },
     });
 
+    const commMap = new Map(communities.map((c) => [c.id, c]));
+    const sortedComms = commIds
+      .map((id: string) => commMap.get(id))
+      .filter((c) => !!c);
+
     return {
-      communities: commsRes.hits,
+      communities: sortedComms,
     };
   }
 
@@ -251,7 +342,20 @@ export class SearchService implements OnModuleInit {
 
     const posts = await this.prisma.post.findMany({
       where: { deletedAt: null },
-      include: { author: true, community: true },
+      include: {
+        author: true,
+        community: true,
+        comments: {
+          where: { deletedAt: null },
+          select: {
+            content: true,
+            replies: {
+              where: { deletedAt: null },
+              select: { content: true },
+            },
+          },
+        },
+      },
     });
 
     const communities = await this.prisma.community.findMany({
@@ -259,17 +363,27 @@ export class SearchService implements OnModuleInit {
     });
 
     if (posts.length > 0) {
-      const postDocs = posts.map((post) => ({
-        id: post.id,
-        title: post.title,
-        content: post.content,
-        type: post.type,
-        score: post.score,
-        authorName: post.author.username,
-        communityName: post.community?.name || null,
-        communitySlug: post.community?.slug || null,
-        createdAt: post.createdAt.toISOString(),
-      }));
+      const postDocs = posts.map((post) => {
+        const commentsText = post.comments
+          .map((c) => {
+            const repliesText = c.replies.map((r) => r.content).join(' ');
+            return `${c.content} ${repliesText}`;
+          })
+          .join(' ');
+
+        return {
+          id: post.id,
+          title: post.title,
+          content: post.content,
+          type: post.type,
+          score: post.score,
+          authorName: post.author.username,
+          communityName: post.community?.name || null,
+          communitySlug: post.community?.slug || null,
+          comments: commentsText,
+          createdAt: post.createdAt.toISOString(),
+        };
+      });
       await this.postsIndex.addDocuments(postDocs);
     }
 
