@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  username      String    @unique
+  passwordHash  String
+  firstName     String?
+  lastName      String?
+  role          Role      @default(USER)
+  isVerified    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime? // Soft delete
+
+  profile       Profile?
+  refreshTokens RefreshToken[]
+  emailTokens   EmailVerificationToken[]
+
+  posts         Post[]
+  comments      Comment[]
+  votes         Vote[]
+  communities   CommunityMember[]
+}
+
+model Profile {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  bio               String?
+  avatarUrl         String?
+  locationText      String?
+  reputationScore   Int      @default(0)
+  contributionCount Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User     @relation(fields: [userId], references: [id])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String
+  familyId  String
+  revokedAt DateTime?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([familyId])
+  @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+model Community {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  avatarUrl   String?
+  bannerUrl   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  members     CommunityMember[]
+  posts       Post[]
+}
+
+model CommunityMember {
+  userId      String
+  communityId String
+  role        MemberRole @default(MEMBER)
+  joinedAt    DateTime   @default(now())
+
+  user        User       @relation(fields: [userId], references: [id])
+  community   Community  @relation(fields: [communityId], references: [id])
+
+  @@id([userId, communityId])
+}
+
+enum MemberRole {
+  MEMBER
+  MODERATOR
+  ADMIN
+}
+
+model Post {
+  id          String    @id @default(uuid())
+  title       String
+  content     String
+  authorId    String
+  communityId String?
+  upvotes     Int       @default(0)
+  downvotes   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  author      User       @relation(fields: [authorId], references: [id])
+  community   Community? @relation(fields: [communityId], references: [id])
+  comments    Comment[]
+  votes       Vote[]
+
+  @@index([authorId])
+  @@index([communityId])
+}
+
+model Comment {
+  id        String    @id @default(uuid())
+  content   String
+  postId    String
+  authorId  String
+  parentId  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  post      Post      @relation(fields: [postId], references: [id])
+  author    User      @relation(fields: [authorId], references: [id])
+  parent    Comment?  @relation("CommentToComment", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentToComment")
+  votes     Vote[]
+
+  @@index([postId])
+  @@index([authorId])
+}
+
+model Vote {
+  id        String   @id @default(uuid())
+  value     Int      // 1 for upvote, -1 for downvote
+  userId    String
+  postId    String?
+  commentId String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post?    @relation(fields: [postId], references: [id])
+  comment   Comment? @relation(fields: [commentId], references: [id])
+
+  @@unique([userId, postId])
+  @@unique([userId, commentId])
+}
