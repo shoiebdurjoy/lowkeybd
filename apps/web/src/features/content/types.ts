@@ -43,6 +43,7 @@ export interface Post {
   updatedAt: string;
   author: PostAuthor;
   community?: PostCommunity | null;
+  userVote?: number;
   _count?: {
     comments: number;
     votes: number;
@@ -61,6 +62,7 @@ export interface Comment {
   updatedAt: string;
   author: PostAuthor;
   replies?: Comment[];
+  userVote?: number;
   _count?: {
     replies: number;
     votes: number;

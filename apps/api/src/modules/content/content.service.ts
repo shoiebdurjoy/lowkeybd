@@ -90,7 +90,7 @@ export class ContentService {
     return post;
   }
 
-  async getPost(id: string) {
+  async getPost(id: string, userId?: string) {
     const post = await this.prisma.post.findUnique({
       where: { id, deletedAt: null, status: PostStatus.PUBLISHED },
       include: POST_INCLUDE,
@@ -106,7 +106,25 @@ export class ContentService {
       data: { viewCount: { increment: 1 } },
     });
 
-    return post;
+    let userVote = 0;
+    if (userId) {
+      const vote = await this.prisma.vote.findUnique({
+        where: {
+          userId_postId: {
+            userId,
+            postId: id,
+          },
+        },
+      });
+      if (vote) {
+        userVote = vote.value;
+      }
+    }
+
+    return {
+      ...post,
+      userVote,
+    };
   }
 
   async updatePost(id: string, userId: string, dto: UpdatePostDto) {
@@ -155,7 +173,7 @@ export class ContentService {
     return { message: 'Post deleted successfully' };
   }
 
-  async getPostComments(postId: string) {
+  async getPostComments(postId: string, userId?: string) {
     // Verify post exists
     const post = await this.prisma.post.findUnique({
       where: { id: postId, deletedAt: null },
@@ -166,11 +184,55 @@ export class ContentService {
     }
 
     // Top-level comments only (parentId is null)
-    return this.prisma.comment.findMany({
+    const comments = await this.prisma.comment.findMany({
       where: { postId, parentId: null, deletedAt: null },
       include: COMMENT_INCLUDE,
       orderBy: { createdAt: 'asc' },
     });
+
+    if (!userId) {
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
+      const attachZeroVotes = (commentList: any[]): any[] => {
+        return commentList.map((c) => {
+          const replies = c.replies ? attachZeroVotes(c.replies) : [];
+          return {
+            ...c,
+            userVote: 0,
+            replies,
+          };
+        });
+      };
+      return attachZeroVotes(comments);
+    }
+
+    // Fetch user votes for comments on this post
+    const userVotes = await this.prisma.vote.findMany({
+      where: {
+        userId,
+        commentId: { not: null },
+        comment: { postId },
+      },
+    });
+
+    const voteMap = new Map<string, number>();
+    userVotes.forEach((v) => {
+      if (v.commentId) voteMap.set(v.commentId, v.value);
+    });
+
+    // Recursively attach userVote to comments and replies
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
+    const attachVotes = (commentList: any[]): any[] => {
+      return commentList.map((c) => {
+        const replies = c.replies ? attachVotes(c.replies) : [];
+        return {
+          ...c,
+          userVote: voteMap.get(c.id) || 0,
+          replies,
+        };
+      });
+    };
+
+    return attachVotes(comments);
   }
 
   async getCommunityFeed(communityId: string) {

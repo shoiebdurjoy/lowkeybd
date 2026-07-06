@@ -21,6 +21,7 @@ interface RequestWithUser {
   user: {
     userId: string;
   };
+  headers?: Record<string, string | undefined>;
 }
 
 @Controller('v1')
@@ -42,8 +43,9 @@ export class ContentController {
 
   @Public()
   @Get('posts/:id')
-  getPost(@Param('id') id: string) {
-    return this.contentService.getPost(id);
+  getPost(@Param('id') id: string, @Request() req: RequestWithUser) {
+    const userId = this.extractUserId(req);
+    return this.contentService.getPost(id, userId);
   }
 
   @Patch('posts/:id')
@@ -63,8 +65,31 @@ export class ContentController {
 
   @Public()
   @Get('posts/:id/comments')
-  getPostComments(@Param('id') postId: string) {
-    return this.contentService.getPostComments(postId);
+  getPostComments(
+    @Param('id') postId: string,
+    @Request() req: RequestWithUser,
+  ) {
+    const userId = this.extractUserId(req);
+    return this.contentService.getPostComments(postId, userId);
+  }
+
+  private extractUserId(req: RequestWithUser): string | undefined {
+    const authHeader = req.headers?.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7);
+        const payloadBase64 = token.split('.')[1];
+        if (payloadBase64) {
+          const decoded = JSON.parse(
+            Buffer.from(payloadBase64, 'base64').toString('utf-8'),
+          ) as { sub: string };
+          return decoded.sub;
+        }
+      } catch {
+        // Silent catch for invalid/malformed tokens on public endpoints
+      }
+    }
+    return undefined;
   }
 
   // ---- COMMENTS ----

@@ -30,7 +30,14 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
   const fetchPost = useCallback(async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/v1/posts/${id}`);
+      const token = localStorage.getItem('accessToken');
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const res = await fetch(`http://localhost:3001/api/v1/posts/${id}`, {
+        headers,
+      });
       if (!res.ok) {
         throw new Error('Post not found');
       }
@@ -45,7 +52,14 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
   const fetchComments = useCallback(async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/v1/posts/${id}/comments`);
+      const token = localStorage.getItem('accessToken');
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const res = await fetch(`http://localhost:3001/api/v1/posts/${id}/comments`, {
+        headers,
+      });
       if (res.ok) {
         const data = await res.json();
         setComments(data);
@@ -170,6 +184,78 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
       await fetchComments();
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Delete failed');
+    }
+  };
+
+  const handlePostVote = async (targetValue: number) => {
+    if (!isAuthenticated) {
+      router.push(`/login?redirect=/posts/${id}`);
+      return;
+    }
+
+    if (!post) return;
+
+    const nextValue = post.userVote === targetValue ? 0 : targetValue;
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await fetch(`http://localhost:3001/api/v1/posts/${id}/vote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ value: nextValue }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || 'Failed to register vote');
+      }
+
+      const voteData = await res.json();
+      setPost(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          upvotes: voteData.post.upvotes,
+          downvotes: voteData.post.downvotes,
+          score: voteData.post.score,
+          userVote: voteData.userVote,
+        };
+      });
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Voting failed');
+    }
+  };
+
+  const handleCommentVote = async (commentId: string, currentVote: number, targetValue: number) => {
+    if (!isAuthenticated) {
+      router.push(`/login?redirect=/posts/${id}`);
+      return;
+    }
+
+    const nextValue = currentVote === targetValue ? 0 : targetValue;
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await fetch(`http://localhost:3001/api/v1/comments/${commentId}/vote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ value: nextValue }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || 'Failed to register vote');
+      }
+
+      await fetchComments();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Voting failed');
     }
   };
 
@@ -313,6 +399,16 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         }
         .vote-btn:hover {
           background: #edf2f7;
+        }
+        .vote-btn.upvoted {
+          background: #fff5f5;
+          border-color: #feb2b2;
+          color: #e53e3e;
+        }
+        .vote-btn.downvoted {
+          background: #ebf8ff;
+          border-color: #90cdf4;
+          color: #3182ce;
         }
         .post-stat {
           font-size: 0.85rem;
@@ -687,8 +783,18 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
               </div>
 
               <div className="post-actions-row">
-                <button className="vote-btn">🔺 {post.upvotes}</button>
-                <button className="vote-btn">🔻 {post.downvotes}</button>
+                <button
+                  className={`vote-btn ${post.userVote === 1 ? 'upvoted' : ''}`}
+                  onClick={() => handlePostVote(1)}
+                >
+                  🔺 {post.upvotes}
+                </button>
+                <button
+                  className={`vote-btn ${post.userVote === -1 ? 'downvoted' : ''}`}
+                  onClick={() => handlePostVote(-1)}
+                >
+                  🔻 {post.downvotes}
+                </button>
                 <div className="post-stat">💬 {post.commentCount} comments</div>
                 <div className="post-stat">👁 {post.viewCount} views</div>
                 {isPostAuthor && (
@@ -801,6 +907,23 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
               </div>
               <p className="comment-content">{comment.content}</p>
               <div className="comment-actions">
+                <button
+                  className="comment-action-btn"
+                  onClick={() => handleCommentVote(comment.id, comment.userVote || 0, 1)}
+                  style={{ color: comment.userVote === 1 ? '#e53e3e' : undefined, fontWeight: comment.userVote === 1 ? 'bold' : 'normal' }}
+                >
+                  🔺 Upvote
+                </button>
+                <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#4a5568', alignSelf: 'center' }}>
+                  {comment.score}
+                </span>
+                <button
+                  className="comment-action-btn"
+                  onClick={() => handleCommentVote(comment.id, comment.userVote || 0, -1)}
+                  style={{ color: comment.userVote === -1 ? '#3182ce' : undefined, fontWeight: comment.userVote === -1 ? 'bold' : 'normal' }}
+                >
+                  🔻 Downvote
+                </button>
                 {isAuthenticated && (
                   <button
                     className="comment-action-btn"
@@ -831,16 +954,33 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                         <span>· {timeAgo(reply.createdAt)}</span>
                       </div>
                       <p className="comment-content">{reply.content}</p>
-                      {user && user.username === reply.author.username && (
-                        <div className="comment-actions">
+                      <div className="comment-actions">
+                        <button
+                          className="comment-action-btn"
+                          onClick={() => handleCommentVote(reply.id, reply.userVote || 0, 1)}
+                          style={{ color: reply.userVote === 1 ? '#e53e3e' : undefined, fontWeight: reply.userVote === 1 ? 'bold' : 'normal' }}
+                        >
+                          🔺 Upvote
+                        </button>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#4a5568', alignSelf: 'center' }}>
+                          {reply.score}
+                        </span>
+                        <button
+                          className="comment-action-btn"
+                          onClick={() => handleCommentVote(reply.id, reply.userVote || 0, -1)}
+                          style={{ color: reply.userVote === -1 ? '#3182ce' : undefined, fontWeight: reply.userVote === -1 ? 'bold' : 'normal' }}
+                        >
+                          🔻 Downvote
+                        </button>
+                        {user && user.username === reply.author.username && (
                           <button
                             className="comment-action-btn danger"
                             onClick={() => handleDeleteComment(reply.id)}
                           >
                             🗑 Delete
                           </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

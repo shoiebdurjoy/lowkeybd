@@ -104,7 +104,7 @@ describe('ContentService', () => {
       mockPrisma.post.update.mockResolvedValue(mockPost);
 
       const result = await service.getPost('post-1');
-      expect(result).toEqual(mockPost);
+      expect(result).toEqual({ ...mockPost, userVote: 0 });
     });
 
     it('should throw NotFoundException if post does not exist', async () => {

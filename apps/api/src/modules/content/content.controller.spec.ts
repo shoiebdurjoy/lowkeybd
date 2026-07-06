@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/unbound-method, @typescript-eslint/no-unsafe-argument */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ContentController } from './content.controller';
 import { ContentService } from './content.service';
@@ -68,10 +68,10 @@ describe('ContentController', () => {
       const mockPost = { id: 'p1', title: 'DH Tech' };
       mockContentService.getPost.mockResolvedValue(mockPost);
 
-      const result = await controller.getPost('p1');
+      const result = await controller.getPost('p1', { headers: {} } as any);
 
       expect(result).toEqual(mockPost);
-      expect(service.getPost).toHaveBeenCalledWith('p1');
+      expect(service.getPost).toHaveBeenCalledWith('p1', undefined);
     });
   });
 });
