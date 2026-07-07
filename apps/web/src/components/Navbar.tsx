@@ -7,7 +7,7 @@ import { useAuth } from '../features/auth/AuthContext';
 import { useNotifications } from '../features/notifications/NotificationsContext';
 
 export default function Navbar() {
-  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, isModerator, logout } = useAuth();
   const { unreadCount } = useNotifications();
   const pathname = usePathname();
   const router = useRouter();
@@ -411,6 +411,13 @@ export default function Navbar() {
                       </Link>
                     </li>
                   </>
+                )}
+                {isModerator && (
+                  <li>
+                    <Link href="/admin" className={`navbar-link ${pathname?.startsWith('/admin') ? 'active' : ''}`}>
+                      ⚙️ Admin
+                    </Link>
+                  </li>
                 )}
               </ul>
             </nav>

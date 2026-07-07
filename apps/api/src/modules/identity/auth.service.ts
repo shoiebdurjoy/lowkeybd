@@ -162,7 +162,7 @@ export class AuthService {
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...safeUser } = user;
-    return safeUser;
+    return { ...safeUser, role: user.role };
   }
 
   async logout(refreshToken: string) {
@@ -174,7 +174,11 @@ export class AuthService {
   }
 
   private async generateTokens(userId: string, existingFamilyId?: string) {
-    const payload = { sub: userId };
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    const payload = { sub: userId, role: user?.role || 'USER' };
 
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: '15m',

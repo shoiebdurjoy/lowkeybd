@@ -32,6 +32,14 @@ model User {
   notificationsReceived  Notification[]          @relation("UserNotifications")
   notificationsTriggered Notification[]          @relation("ActorNotifications")
   notificationPreference NotificationPreference?
+
+  reports                Report[]                @relation("ReporterReports")
+  assignedReports        Report[]                @relation("AssignedReports")
+  moderationActions      ModerationAction[]      @relation("ModeratorActions")
+  targetedActions        ModerationAction[]      @relation("TargetActions")
+  auditLogs              AuditLog[]              @relation("AuditLogs")
+  restrictions           UserRestriction[]       @relation("UserRestrictions")
+  createdRestrictions    UserRestriction[]       @relation("CreatedRestrictions")
 }
 
 model Profile {
@@ -239,4 +247,94 @@ model NotificationPreference {
   newMentionEmail Boolean  @default(true)
 
   user            User     @relation(fields: [userId], references: [id])
+}
+
+// ---- Milestone 7: Moderation & Admin ----
+
+enum ReportStatus {
+  PENDING
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+model Report {
+  id           String       @id @default(uuid())
+  reporterId   String
+  targetType   String       // "post", "comment", "user"
+  targetId     String
+  reason       String
+  details      String?
+  status       ReportStatus @default(PENDING)
+  assignedToId String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  reporter     User         @relation("ReporterReports", fields: [reporterId], references: [id])
+  assignedTo   User?        @relation("AssignedReports", fields: [assignedToId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+  @@index([reporterId])
+}
+
+model ModerationAction {
+  id           String   @id @default(uuid())
+  moderatorId  String
+  targetUserId String?
+  targetType   String
+  targetId     String
+  actionType   String   // "warn", "remove_content", "restrict", "ban", "unban"
+  reason       String
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  moderator    User     @relation("ModeratorActions", fields: [moderatorId], references: [id])
+  targetUser   User?    @relation("TargetActions", fields: [targetUserId], references: [id])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String
+  ipAddress  String?
+  userAgent  String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  actor      User?    @relation("AuditLogs", fields: [actorId], references: [id])
+
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId])
+  @@index([action, createdAt])
+}
+
+model FeatureFlag {
+  id                String   @id @default(uuid())
+  key               String   @unique
+  description       String?
+  enabled           Boolean  @default(false)
+  rolloutPercentage Int      @default(0)
+  rules             Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model UserRestriction {
+  id          String    @id @default(uuid())
+  userId      String
+  type        String    // "ban", "mute", "post_restrict"
+  reason      String
+  expiresAt   DateTime?
+  isActive    Boolean   @default(true)
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation("UserRestrictions", fields: [userId], references: [id])
+  createdBy   User      @relation("CreatedRestrictions", fields: [createdById], references: [id])
+
+  @@index([userId, isActive])
 }

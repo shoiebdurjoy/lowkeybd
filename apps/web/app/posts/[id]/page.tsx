@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../src/features/auth/AuthContext';
 import { Post, Comment, POST_TYPE_LABELS, POST_TYPE_COLORS } from '../../../src/features/content/types';
+import ReportDialog from '../../../src/components/ReportDialog';
 
 export default function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { isAuthenticated, user } = useAuth();
@@ -27,6 +28,9 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  // Report dialog state
+  const [reportTarget, setReportTarget] = useState<{ type: 'post' | 'comment'; id: string } | null>(null);
 
   const fetchPost = useCallback(async () => {
     try {
@@ -807,6 +811,15 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                     </button>
                   </div>
                 )}
+                {isAuthenticated && !isPostAuthor && (
+                  <button
+                    className="edit-btn"
+                    style={{ marginLeft: isPostAuthor ? 0 : 'auto' }}
+                    onClick={() => setReportTarget({ type: 'post', id: post.id })}
+                  >
+                    🚩 Report
+                  </button>
+                )}
               </div>
             </>
           ) : (
@@ -940,6 +953,14 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                     🗑 Delete
                   </button>
                 )}
+                {isAuthenticated && user && user.username !== comment.author.username && (
+                  <button
+                    className="comment-action-btn"
+                    onClick={() => setReportTarget({ type: 'comment', id: comment.id })}
+                  >
+                    🚩 Report
+                  </button>
+                )}
               </div>
 
               {/* Nested Replies */}
@@ -995,6 +1016,14 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
           )}
         </div>
       </div>
+
+      {/* Report Dialog */}
+      <ReportDialog
+        isOpen={!!reportTarget}
+        onClose={() => setReportTarget(null)}
+        targetType={reportTarget?.type || 'post'}
+        targetId={reportTarget?.id || ''}
+      />
     </div>
   );
 }

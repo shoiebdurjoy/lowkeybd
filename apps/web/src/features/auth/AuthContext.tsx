@@ -8,12 +8,15 @@ interface User {
   email: string;
   username: string;
   isVerified: boolean;
+  role: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isAdmin: boolean;
+  isModerator: boolean;
   login: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
 }
@@ -22,6 +25,8 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
   isLoading: true,
+  isAdmin: false,
+  isModerator: false,
   login: () => {},
   logout: () => {},
 });
@@ -76,8 +81,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     router.push('/login');
   };
 
+  const isAdmin = user?.role === 'ADMIN';
+  const isModerator = user?.role === 'MODERATOR' || user?.role === 'ADMIN';
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, isAdmin, isModerator, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -12,6 +12,9 @@ import { ContentModule } from './modules/content/content.module';
 import { VotingModule } from './modules/voting/voting.module';
 import { SearchModule } from './modules/search/search.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ModerationModule } from './modules/moderation/moderation.module';
+import { AuditModule } from './modules/audit/audit.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
@@ -58,6 +61,9 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
     VotingModule,
     SearchModule,
     NotificationsModule,
+    ModerationModule,
+    AuditModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
