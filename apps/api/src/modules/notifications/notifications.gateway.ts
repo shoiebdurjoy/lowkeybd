@@ -7,6 +7,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { Logger } from '@nestjs/common';
+import { PrismaService } from '../../common/database/prisma.service';
 
 @WebSocketGateway({
   cors: {
@@ -22,9 +23,12 @@ export class NotificationsGateway
 
   private readonly logger = new Logger(NotificationsGateway.name);
 
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
+  ) {}
 
-  handleConnection(client: Socket) {
+  async handleConnection(client: Socket) {
     try {
       const authHeader =
         (client.handshake.auth?.token as string) ||
@@ -44,6 +48,23 @@ export class NotificationsGateway
       const userId = payload.sub;
       if (!userId) {
         this.logger.debug('Invalid token payload, disconnecting client');
+        client.disconnect();
+        return;
+      }
+
+      // Check if user is banned
+      const ban = await this.prisma.userRestriction.findFirst({
+        where: {
+          userId,
+          type: 'ban',
+          isActive: true,
+        },
+      });
+
+      if (ban) {
+        this.logger.debug(
+          `Banned user ${userId} attempted to connect. Disconnecting client.`,
+        );
         client.disconnect();
         return;
       }

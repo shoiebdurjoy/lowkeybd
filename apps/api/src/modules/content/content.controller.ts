@@ -19,6 +19,7 @@ import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { EmailVerifiedGuard } from '../../common/guards/email-verified.guard';
 import { PostRestrictionGuard } from '../../common/guards/post-restriction.guard';
+import { Throttle } from '@nestjs/throttler';
 
 interface RequestWithUser {
   user: {
@@ -40,6 +41,7 @@ export class ContentController {
   }
 
   @UseGuards(EmailVerifiedGuard, PostRestrictionGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('posts')
   createPost(@Request() req: RequestWithUser, @Body() dto: CreatePostDto) {
     return this.contentService.createPost(req.user.userId, dto);
@@ -53,6 +55,7 @@ export class ContentController {
   }
 
   @UseGuards(EmailVerifiedGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Patch('posts/:id')
   updatePost(
     @Request() req: RequestWithUser,
@@ -63,6 +66,7 @@ export class ContentController {
   }
 
   @UseGuards(EmailVerifiedGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Delete('posts/:id')
   @HttpCode(HttpStatus.OK)
   deletePost(@Request() req: RequestWithUser, @Param('id') id: string) {
@@ -101,6 +105,7 @@ export class ContentController {
   // ---- COMMENTS ----
 
   @UseGuards(EmailVerifiedGuard)
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Post('posts/:id/comments')
   createComment(
     @Request() req: RequestWithUser,
@@ -111,6 +116,7 @@ export class ContentController {
   }
 
   @UseGuards(EmailVerifiedGuard)
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Patch('comments/:id')
   updateComment(
     @Request() req: RequestWithUser,
@@ -121,6 +127,7 @@ export class ContentController {
   }
 
   @UseGuards(EmailVerifiedGuard)
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Delete('comments/:id')
   @HttpCode(HttpStatus.OK)
   deleteComment(@Request() req: RequestWithUser, @Param('id') id: string) {

@@ -13,6 +13,7 @@ import { CreateCommunityDto } from './dto/create-community.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { EmailVerifiedGuard } from '../../common/guards/email-verified.guard';
+import { Throttle } from '@nestjs/throttler';
 
 interface RequestWithUser {
   user: {
@@ -32,6 +33,7 @@ export class CommunitiesController {
   }
 
   @UseGuards(EmailVerifiedGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post()
   create(@Request() req: RequestWithUser, @Body() dto: CreateCommunityDto) {
     return this.communitiesService.create(req.user.userId, dto);
@@ -46,6 +48,7 @@ export class CommunitiesController {
   }
 
   @UseGuards(EmailVerifiedGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Patch(':slug')
   update(
     @Param('slug') slug: string,
@@ -56,12 +59,14 @@ export class CommunitiesController {
   }
 
   @UseGuards(EmailVerifiedGuard)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @Post(':slug/join')
   join(@Param('slug') slug: string, @Request() req: RequestWithUser) {
     return this.communitiesService.join(slug, req.user.userId);
   }
 
   @UseGuards(EmailVerifiedGuard)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @Post(':slug/leave')
   leave(@Param('slug') slug: string, @Request() req: RequestWithUser) {
     return this.communitiesService.leave(slug, req.user.userId);

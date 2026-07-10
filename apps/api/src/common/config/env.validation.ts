@@ -7,7 +7,11 @@ export const envValidationSchema = Joi.object({
   PORT: Joi.number().default(3001),
   DATABASE_URL: Joi.string().required(),
   REDIS_URL: Joi.string().default('redis://localhost:6379'),
-  JWT_SECRET: Joi.string().default('super-secret-key-for-dev'),
+  JWT_SECRET: Joi.string().when('NODE_ENV', {
+    is: 'production',
+    then: Joi.required(),
+    otherwise: Joi.string().default('super-secret-key-for-dev'),
+  }),
   MEILISEARCH_HOST: Joi.string().default('http://localhost:7700'),
   MEILISEARCH_API_KEY: Joi.string().default('masterKey123!'),
   SMTP_HOST: Joi.string().default('127.0.0.1'),

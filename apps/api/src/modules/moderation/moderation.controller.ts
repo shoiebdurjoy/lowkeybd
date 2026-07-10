@@ -14,12 +14,14 @@ import { ResolveReportDto } from './dto/resolve-report.dto';
 import { CreateModerationActionDto } from './dto/create-moderation-action.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller()
 export class ModerationController {
   constructor(private readonly moderationService: ModerationService) {}
 
   // Any authenticated user can report content
+  @Throttle({ default: { limit: 15, ttl: 60000 } })
   @Post('reports')
   async createReport(
     @Request() req: { user: { userId: string } },
@@ -45,6 +47,7 @@ export class ModerationController {
   }
 
   // Admin/Moderator: resolve a report
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @Post('admin/reports/:id/resolve')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 'MODERATOR')
@@ -57,6 +60,7 @@ export class ModerationController {
   }
 
   // Admin/Moderator: take moderation action
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   @Post('admin/moderation/actions')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 'MODERATOR')
