@@ -393,7 +393,7 @@ export default function NotificationsPage() {
           font-weight: 500;
         }
 
-        @media (prefers-color-scheme: dark) {
+        .dark {
           .notif-wrapper {
             background: #0a0a0a;
           }

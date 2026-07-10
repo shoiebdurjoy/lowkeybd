@@ -15,8 +15,28 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Array<{ text: string; type: 'post' | 'community'; id: string; slug?: string }>>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   const isActive = (path: string) => pathname === path;
+
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    setTheme(isDark ? 'dark' : 'light');
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    if (nextTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -234,7 +254,29 @@ export default function Navbar() {
           }
         }
 
-        @media (prefers-color-scheme: dark) {
+          .theme-toggle-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: #4a5568;
+            margin-right: 8px;
+          }
+          .theme-toggle-btn:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            transform: scale(1.1);
+          }
+          .theme-toggle-btn:focus-visible {
+            outline: 2px solid #FF416C;
+          }
+
+          .dark {
           .navbar-header {
             background: rgba(10, 10, 10, 0.8);
             border-bottom-color: rgba(34, 34, 34, 0.8);
@@ -330,7 +372,15 @@ export default function Navbar() {
           color: #FF416C;
         }
 
-        @media (prefers-color-scheme: dark) {
+          .dark .theme-toggle-btn {
+            color: #a0aec0;
+          }
+          .dark .theme-toggle-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+          }
+
+          .dark {
           .navbar-search-input {
             background: #1a1a1a;
             border-color: #2d3748;
@@ -423,6 +473,13 @@ export default function Navbar() {
             </nav>
 
             <div className="navbar-actions">
+              <button
+                onClick={toggleTheme}
+                className="theme-toggle-btn"
+                aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              >
+                {theme === 'dark' ? '☀️' : '🌙'}
+              </button>
               {isAuthenticated ? (
                 <>
                   <span className="user-greeting">

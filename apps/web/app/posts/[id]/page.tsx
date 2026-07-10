@@ -687,7 +687,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
           text-decoration: underline;
         }
 
-        @media (prefers-color-scheme: dark) {
+        .dark {
           .page-wrapper {
             background: #0a0a0a;
           }

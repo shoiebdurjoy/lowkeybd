@@ -423,7 +423,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
           color: #4a5568;
         }
 
-        @media (prefers-color-scheme: dark) {
+        .dark {
           .wrapper {
             background: #0a0a0a;
           }

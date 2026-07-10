@@ -111,7 +111,7 @@ export default function AdminOverviewPage() {
           letter-spacing: -0.03em;
         }
 
-        @media (prefers-color-scheme: dark) {
+        .dark {
           .admin-page-title { color: #e2e8f0; }
           .admin-page-subtitle { color: #a0aec0; }
           .metric-card {

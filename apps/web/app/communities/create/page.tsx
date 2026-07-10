@@ -197,7 +197,7 @@ export default function CreateCommunityPage() {
           margin-bottom: 25px;
         }
 
-        @media (prefers-color-scheme: dark) {
+        .dark {
           .title {
             color: #fff;
           }

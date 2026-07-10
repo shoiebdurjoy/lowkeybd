@@ -4,10 +4,15 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
+}
+
+:root.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 html,
@@ -19,6 +24,7 @@ body {
 body {
   color: var(--foreground);
   background: var(--background);
+  transition: background-color 0.2s, color 0.2s;
 }
 
 * {
@@ -37,14 +43,33 @@ a {
 }
 
 @media (prefers-color-scheme: dark) {
-  html {
+  html:not(.light) {
     color-scheme: dark;
   }
 
-  .imgLight {
+  html:not(.light) .imgLight {
     display: none;
   }
-  .imgDark {
+  html:not(.light) .imgDark {
     display: unset;
   }
 }
+
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark .imgLight {
+  display: none;
+}
+
+html.dark .imgDark {
+  display: unset;
+}
+
+/* Accessibility: Visible focus outline styles */
+*:focus-visible {
+  outline: 2px solid #FF416C;
+  outline-offset: 2px;
+}
+

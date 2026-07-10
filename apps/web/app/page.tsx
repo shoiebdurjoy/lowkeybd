@@ -312,7 +312,7 @@ export default function Home() {
           color: #718096;
         }
 
-        @media (prefers-color-scheme: dark) {
+        .dark {
           .home-wrapper {
             background: #0a0a0a;
           }

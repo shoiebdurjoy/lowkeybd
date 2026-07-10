@@ -198,7 +198,7 @@ export default function CommunitiesPage() {
           color: #e53e3e;
         }
 
-        @media (prefers-color-scheme: dark) {
+        .dark {
           .card {
             background: #111;
             border-color: #222;

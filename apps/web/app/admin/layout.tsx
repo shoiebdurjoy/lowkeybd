@@ -90,7 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           overflow-x: auto;
         }
 
-        @media (prefers-color-scheme: dark) {
+        .dark {
           .admin-sidebar {
             background: #0a0a0a;
             border-right-color: #1a1a1a;

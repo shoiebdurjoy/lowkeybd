@@ -110,7 +110,7 @@ export default function AdminAuditLogsPage() {
         .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .page-info { font-size: 0.85rem; color: #718096; font-weight: 600; }
 
-        @media (prefers-color-scheme: dark) {
+        .dark {
           .admin-page-title { color: #e2e8f0; }
           .audit-filter-input { background: #0a0a0a; border-color: #1a1a1a; color: white; }
           .audit-entry { border-left-color: #1a1a1a; }

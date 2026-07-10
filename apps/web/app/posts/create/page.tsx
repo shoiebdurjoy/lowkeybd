@@ -356,7 +356,7 @@ export default function CreatePostPage() {
           margin-bottom: 20px;
         }
 
-        @media (prefers-color-scheme: dark) {
+        .dark {
           .page-wrapper {
             background: #0a0a0a;
           }

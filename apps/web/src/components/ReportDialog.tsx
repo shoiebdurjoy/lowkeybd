@@ -246,7 +246,7 @@ export default function ReportDialog({ isOpen, onClose, targetType, targetId }: 
           margin-bottom: 16px;
         }
 
-        @media (prefers-color-scheme: dark) {
+        .dark {
           .report-dialog {
             background: #111;
             border: 1px solid #222;

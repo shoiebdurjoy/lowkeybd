@@ -556,7 +556,7 @@ export default function SearchPage() {
           to { transform: rotate(360deg); }
         }
 
-        @media (prefers-color-scheme: dark) {
+        .dark {
           .search-wrapper {
             background: #0a0a0a;
           }

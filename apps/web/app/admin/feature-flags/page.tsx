@@ -179,7 +179,7 @@ export default function AdminFeatureFlagsPage() {
           text-align: center; padding: 60px 0; color: #a0aec0;
         }
 
-        @media (prefers-color-scheme: dark) {
+        .dark {
           .admin-page-title { color: #e2e8f0; }
           .create-flag-form { background: #0a0a0a; border-color: #1a1a1a; }
           .create-flag-field label { color: #4a5568; }

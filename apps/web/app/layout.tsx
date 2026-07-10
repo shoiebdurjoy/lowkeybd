@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 import { AuthProvider } from '../src/features/auth/AuthContext';
 import { NotificationsProvider } from '../src/features/notifications/NotificationsContext';
 import Navbar from '../src/components/Navbar';
+import CommandPalette from '../src/components/CommandPalette';
 
 export default function RootLayout({
   children,
@@ -27,10 +28,28 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            try {
+              var theme = localStorage.getItem('theme');
+              var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+              if (theme === 'dark' || (!theme && systemDark)) {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+              } else {
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
+              }
+            } catch (e) {}
+          })()
+        `}} />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider>
           <NotificationsProvider>
             <Navbar />
+            <CommandPalette />
             {children}
           </NotificationsProvider>
         </AuthProvider>

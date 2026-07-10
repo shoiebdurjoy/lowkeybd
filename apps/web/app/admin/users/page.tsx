@@ -178,7 +178,7 @@ export default function AdminUsersPage() {
           border-radius: 4px; font-size: 0.72rem; font-weight: 700;
         }
 
-        @media (prefers-color-scheme: dark) {
+        .dark {
           .admin-page-title { color: #e2e8f0; }
           .search-input { background: #0a0a0a; border-color: #1a1a1a; color: white; }
           .role-select { background: #0a0a0a; border-color: #1a1a1a; color: #a0aec0; }
