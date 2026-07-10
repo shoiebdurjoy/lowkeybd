@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../lib/config';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -38,7 +39,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUser = async (token: string) => {
     try {
-      const res = await fetch('http://localhost:3001/api/v1/auth/me', {
+      const res = await fetch(`${API_URL}/api/v1/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

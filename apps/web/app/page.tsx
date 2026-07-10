@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../src/lib/config';
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -16,7 +17,7 @@ export default function Home() {
   useEffect(() => {
     async function fetchGlobalFeed() {
       try {
-        const res = await fetch('http://localhost:3001/api/v1/posts');
+        const res = await fetch(`${API_URL}/api/v1/posts`);
         if (!res.ok) {
           throw new Error('Failed to load global feed');
         }

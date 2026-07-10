@@ -6,11 +6,13 @@ import {
   Body,
   Param,
   Request,
+  UseGuards,
 } from '@nestjs/common';
 import { CommunitiesService } from './communities.service';
 import { CreateCommunityDto } from './dto/create-community.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
 import { Public } from '../../common/decorators/public.decorator';
+import { EmailVerifiedGuard } from '../../common/guards/email-verified.guard';
 
 interface RequestWithUser {
   user: {
@@ -29,6 +31,7 @@ export class CommunitiesController {
     return this.communitiesService.findAll();
   }
 
+  @UseGuards(EmailVerifiedGuard)
   @Post()
   create(@Request() req: RequestWithUser, @Body() dto: CreateCommunityDto) {
     return this.communitiesService.create(req.user.userId, dto);
@@ -42,6 +45,7 @@ export class CommunitiesController {
     return this.communitiesService.findOne(slug, userId);
   }
 
+  @UseGuards(EmailVerifiedGuard)
   @Patch(':slug')
   update(
     @Param('slug') slug: string,
@@ -51,11 +55,13 @@ export class CommunitiesController {
     return this.communitiesService.update(slug, req.user.userId, dto);
   }
 
+  @UseGuards(EmailVerifiedGuard)
   @Post(':slug/join')
   join(@Param('slug') slug: string, @Request() req: RequestWithUser) {
     return this.communitiesService.join(slug, req.user.userId);
   }
 
+  @UseGuards(EmailVerifiedGuard)
   @Post(':slug/leave')
   leave(@Param('slug') slug: string, @Request() req: RequestWithUser) {
     return this.communitiesService.leave(slug, req.user.userId);

@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../../src/lib/config';
 
 import React, { useEffect, useState } from 'react';
 
@@ -23,7 +24,7 @@ export default function AdminFeatureFlagsPage() {
   const fetchFlags = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch('http://localhost:3001/api/v1/admin/feature-flags', {
+      const res = await fetch(`${API_URL}/api/v1/admin/feature-flags`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed to fetch feature flags');
@@ -44,7 +45,7 @@ export default function AdminFeatureFlagsPage() {
     setActionLoading(key);
     try {
       const token = localStorage.getItem('accessToken');
-      await fetch(`http://localhost:3001/api/v1/admin/feature-flags/${key}`, {
+      await fetch(`${API_URL}/api/v1/admin/feature-flags/${key}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ enabled: !currentEnabled }),
@@ -60,7 +61,7 @@ export default function AdminFeatureFlagsPage() {
   const handleRolloutChange = async (key: string, rollout: number) => {
     try {
       const token = localStorage.getItem('accessToken');
-      await fetch(`http://localhost:3001/api/v1/admin/feature-flags/${key}`, {
+      await fetch(`${API_URL}/api/v1/admin/feature-flags/${key}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ rolloutPercentage: rollout }),
@@ -78,7 +79,7 @@ export default function AdminFeatureFlagsPage() {
     setCreating(true);
     try {
       const token = localStorage.getItem('accessToken');
-      await fetch('http://localhost:3001/api/v1/admin/feature-flags', {
+      await fetch(`${API_URL}/api/v1/admin/feature-flags`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ key: newKey.trim(), description: newDescription.trim() || undefined }),

@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../../src/lib/config';
 
 import React, { useState } from 'react';
 import { useAuth } from '../../../src/features/auth/AuthContext';
@@ -16,7 +17,7 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      const res = await fetch('http://localhost:3001/api/v1/auth/register', {
+      const res = await fetch(`${API_URL}/api/v1/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, username, password }),

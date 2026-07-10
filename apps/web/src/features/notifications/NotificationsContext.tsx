@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../lib/config';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
@@ -49,7 +50,7 @@ export const NotificationsProvider = ({ children }: { children: React.ReactNode 
     if (!token) return;
 
     try {
-      const res = await fetch('http://localhost:3001/api/v1/notifications', {
+      const res = await fetch(`${API_URL}/api/v1/notifications`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -77,7 +78,7 @@ export const NotificationsProvider = ({ children }: { children: React.ReactNode 
     if (!token) return;
 
     // Connect to notifications namespace via Socket.io
-    const socket: Socket = io('http://localhost:3001/notifications', {
+    const socket: Socket = io(`${API_URL}/notifications`, {
       auth: { token },
       transports: ['websocket'],
     });
@@ -106,7 +107,7 @@ export const NotificationsProvider = ({ children }: { children: React.ReactNode 
     if (!token) return;
 
     try {
-      const res = await fetch(`http://localhost:3001/api/v1/notifications/${id}/read`, {
+      const res = await fetch(`${API_URL}/api/v1/notifications/${id}/read`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -128,7 +129,7 @@ export const NotificationsProvider = ({ children }: { children: React.ReactNode 
     if (!token) return;
 
     try {
-      const res = await fetch('http://localhost:3001/api/v1/notifications/read-all', {
+      const res = await fetch(`${API_URL}/api/v1/notifications/read-all`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

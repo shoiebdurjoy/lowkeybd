@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../../../src/lib/config';
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../../src/features/auth/AuthContext';
@@ -25,7 +26,7 @@ export default function EditProfilePage() {
     if (user) {
       const fetchProfile = async () => {
         try {
-          const res = await fetch(`http://localhost:3001/api/v1/users/${user.username}`);
+          const res = await fetch(`${API_URL}/api/v1/users/${user.username}`);
           if (res.ok) {
             const data = await res.json();
             setBio(data.profile?.bio || '');
@@ -47,7 +48,7 @@ export default function EditProfilePage() {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch('http://localhost:3001/api/v1/me/profile', {
+      const res = await fetch(`${API_URL}/api/v1/me/profile`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

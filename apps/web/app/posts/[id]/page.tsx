@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../../src/lib/config';
 
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
@@ -39,7 +40,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      const res = await fetch(`http://localhost:3001/api/v1/posts/${id}`, {
+      const res = await fetch(`${API_URL}/api/v1/posts/${id}`, {
         headers,
       });
       if (!res.ok) {
@@ -61,7 +62,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      const res = await fetch(`http://localhost:3001/api/v1/posts/${id}/comments`, {
+      const res = await fetch(`${API_URL}/api/v1/posts/${id}/comments`, {
         headers,
       });
       if (res.ok) {
@@ -90,7 +91,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`http://localhost:3001/api/v1/posts/${id}/comments`, {
+      const res = await fetch(`${API_URL}/api/v1/posts/${id}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +123,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`http://localhost:3001/api/v1/posts/${id}`, {
+      const res = await fetch(`${API_URL}/api/v1/posts/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -147,7 +148,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`http://localhost:3001/api/v1/posts/${id}`, {
+      const res = await fetch(`${API_URL}/api/v1/posts/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -175,7 +176,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`http://localhost:3001/api/v1/comments/${commentId}`, {
+      const res = await fetch(`${API_URL}/api/v1/comments/${commentId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -203,7 +204,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`http://localhost:3001/api/v1/posts/${id}/vote`, {
+      const res = await fetch(`${API_URL}/api/v1/posts/${id}/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -243,7 +244,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`http://localhost:3001/api/v1/comments/${commentId}/vote`, {
+      const res = await fetch(`${API_URL}/api/v1/comments/${commentId}/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

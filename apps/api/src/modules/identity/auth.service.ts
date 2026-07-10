@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   BadRequestException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service';
 import { RegisterDto } from './dto/register.dto';
@@ -118,6 +119,21 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Check for active ban restriction
+    const ban = await this.prisma.userRestriction.findFirst({
+      where: {
+        userId: user.id,
+        type: 'ban',
+        isActive: true,
+      },
+    });
+
+    if (ban) {
+      throw new ForbiddenException(
+        `Your account has been banned: ${ban.reason}`,
+      );
+    }
+
     return this.generateTokens(user.id);
   }
 
@@ -149,6 +165,21 @@ export class AuthService {
       data: { revokedAt: new Date() },
     });
 
+    // Check if user is banned
+    const ban = await this.prisma.userRestriction.findFirst({
+      where: {
+        userId: storedToken.userId,
+        type: 'ban',
+        isActive: true,
+      },
+    });
+
+    if (ban) {
+      throw new ForbiddenException(
+        `Your account has been banned: ${ban.reason}`,
+      );
+    }
+
     return this.generateTokens(storedToken.userId, storedToken.familyId);
   }
 
@@ -176,9 +207,13 @@ export class AuthService {
   private async generateTokens(userId: string, existingFamilyId?: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { role: true },
+      select: { role: true, isVerified: true },
     });
-    const payload = { sub: userId, role: user?.role || 'USER' };
+    const payload = {
+      sub: userId,
+      role: user?.role || 'USER',
+      isVerified: user?.isVerified || false,
+    };
 
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: '15m',

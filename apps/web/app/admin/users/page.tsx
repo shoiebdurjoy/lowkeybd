@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../../src/lib/config';
 
 import React, { useEffect, useState, useCallback } from 'react';
 
@@ -31,7 +32,7 @@ export default function AdminUsersPage() {
       if (appliedSearch) params.set('search', appliedSearch);
       if (roleFilter) params.set('role', roleFilter);
 
-      const res = await fetch(`http://localhost:3001/api/v1/admin/users?${params}`, {
+      const res = await fetch(`${API_URL}/api/v1/admin/users?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed to fetch users');
@@ -61,7 +62,7 @@ export default function AdminUsersPage() {
     setActionLoading(userId);
     try {
       const token = localStorage.getItem('accessToken');
-      await fetch(`http://localhost:3001/api/v1/admin/users/${userId}/status`, {
+      await fetch(`${API_URL}/api/v1/admin/users/${userId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ role: newRole }),
@@ -78,7 +79,7 @@ export default function AdminUsersPage() {
     setActionLoading(userId);
     try {
       const token = localStorage.getItem('accessToken');
-      await fetch(`http://localhost:3001/api/v1/admin/users/${userId}/status`, {
+      await fetch(`${API_URL}/api/v1/admin/users/${userId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ banned: !isBanned, banReason: isBanned ? undefined : 'Banned by admin' }),

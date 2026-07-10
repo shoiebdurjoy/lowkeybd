@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../lib/config';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -46,7 +47,7 @@ export default function Navbar() {
 
     const delayDebounce = setTimeout(async () => {
       try {
-        const res = await fetch(`http://localhost:3001/api/v1/search/suggestions?q=${encodeURIComponent(searchQuery)}`);
+        const res = await fetch(`${API_URL}/api/v1/search/suggestions?q=${encodeURIComponent(searchQuery)}`);
         if (res.ok) {
           const data = await res.json();
           setSuggestions(data.suggestions || []);

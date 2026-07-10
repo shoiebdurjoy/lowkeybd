@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../../src/lib/config';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -15,7 +16,7 @@ export default function VerifyEmailPage() {
     setMessage('');
 
     try {
-      const res = await fetch('http://localhost:3001/api/v1/auth/verify-email', {
+      const res = await fetch(`${API_URL}/api/v1/auth/verify-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),

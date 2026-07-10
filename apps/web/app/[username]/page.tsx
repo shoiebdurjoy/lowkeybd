@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../src/lib/config';
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -23,7 +24,7 @@ export default function UserProfilePage({ params }: { params: { username: string
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`http://localhost:3001/api/v1/users/${username}`);
+        const res = await fetch(`${API_URL}/api/v1/users/${username}`);
         if (!res.ok) {
           throw new Error('User not found');
         }

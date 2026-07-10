@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../../src/lib/config';
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -27,7 +28,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
       }
 
       // Fetch community details
-      const commRes = await fetch(`http://localhost:3001/api/v1/communities/${slug}`, {
+      const commRes = await fetch(`${API_URL}/api/v1/communities/${slug}`, {
         headers,
       });
 
@@ -39,7 +40,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
       setCommunity(commData);
 
       // Fetch community posts
-      const postsRes = await fetch(`http://localhost:3001/api/v1/communities/${slug}/posts`);
+      const postsRes = await fetch(`${API_URL}/api/v1/communities/${slug}/posts`);
       if (postsRes.ok) {
         const postsData = await postsRes.json();
         setPosts(postsData);
@@ -67,7 +68,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ slug
 
     setIsActionLoading(true);
     const isJoined = !!community.membership;
-    const endpoint = `http://localhost:3001/api/v1/communities/${slug}/${isJoined ? 'leave' : 'join'}`;
+    const endpoint = `${API_URL}/api/v1/communities/${slug}/${isJoined ? 'leave' : 'join'}`;
 
     try {
       const token = localStorage.getItem('accessToken');

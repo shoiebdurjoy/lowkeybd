@@ -1,7 +1,8 @@
+import { API_URL } from './src/lib/config';
 import { z } from 'zod';
 
 const envSchema = z.object({
-  NEXT_PUBLIC_API_URL: z.string().url().default('http://localhost:3001'),
+  NEXT_PUBLIC_API_URL: z.string().url().default(`${API_URL}`),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 });
 

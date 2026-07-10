@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../src/lib/config';
 
 import React, { useEffect, useState, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -40,7 +41,7 @@ function SearchPageContent() {
     try {
       const deepParam = deepSearch ? '&deep=true' : '';
       const res = await fetch(
-        `http://localhost:3001/api/v1/search?q=${encodeURIComponent(query)}${deepParam}`,
+        `${API_URL}/api/v1/search?q=${encodeURIComponent(query)}${deepParam}`,
       );
       if (!res.ok) {
         throw new Error('Search failed');

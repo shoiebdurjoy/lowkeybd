@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../../src/lib/config';
 
 import React, { useEffect, useState } from 'react';
 
@@ -30,7 +31,7 @@ export default function AdminAuditLogsPage() {
         const params = new URLSearchParams({ page: String(page), limit: '20' });
         if (actionFilter) params.set('action', actionFilter);
 
-        const res = await fetch(`http://localhost:3001/api/v1/admin/audit-logs?${params}`, {
+        const res = await fetch(`${API_URL}/api/v1/admin/audit-logs?${params}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error('Failed to fetch audit logs');

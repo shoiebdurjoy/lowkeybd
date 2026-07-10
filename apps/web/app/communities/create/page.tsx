@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../../src/lib/config';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -46,7 +47,7 @@ export default function CreateCommunityPage() {
         throw new Error('You must be logged in to create a community.');
       }
 
-      const res = await fetch('http://localhost:3001/api/v1/communities', {
+      const res = await fetch(`${API_URL}/api/v1/communities`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

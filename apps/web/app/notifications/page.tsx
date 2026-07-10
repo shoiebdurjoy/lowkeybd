@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../src/lib/config';
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -41,7 +42,7 @@ export default function NotificationsPage() {
       if (!token) return;
 
       try {
-        const res = await fetch('http://localhost:3001/api/v1/notifications/preferences', {
+        const res = await fetch(`${API_URL}/api/v1/notifications/preferences`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -78,7 +79,7 @@ export default function NotificationsPage() {
     setPrefsSuccess(false);
 
     try {
-      const res = await fetch('http://localhost:3001/api/v1/notifications/preferences', {
+      const res = await fetch(`${API_URL}/api/v1/notifications/preferences`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

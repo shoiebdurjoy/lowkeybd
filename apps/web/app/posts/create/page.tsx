@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../../src/lib/config';
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -54,7 +55,7 @@ function CreatePostForm() {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch('http://localhost:3001/api/v1/posts', {
+      const res = await fetch(`${API_URL}/api/v1/posts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

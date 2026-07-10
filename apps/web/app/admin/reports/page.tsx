@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../../src/lib/config';
 
 import React, { useEffect, useState, useCallback } from 'react';
 
@@ -30,7 +31,7 @@ export default function AdminReportsPage() {
       const params = new URLSearchParams({ page: String(page), limit: '15' });
       if (statusFilter) params.set('status', statusFilter);
 
-      const res = await fetch(`http://localhost:3001/api/v1/admin/reports?${params}`, {
+      const res = await fetch(`${API_URL}/api/v1/admin/reports?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Failed to fetch reports');
@@ -54,7 +55,7 @@ export default function AdminReportsPage() {
     setActionLoading(reportId);
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`http://localhost:3001/api/v1/admin/reports/${reportId}/resolve`, {
+      const res = await fetch(`${API_URL}/api/v1/admin/reports/${reportId}/resolve`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

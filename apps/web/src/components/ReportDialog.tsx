@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../lib/config';
 
 import React, { useState } from 'react';
 
@@ -37,7 +38,7 @@ export default function ReportDialog({ isOpen, onClose, targetType, targetId }: 
 
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch('http://localhost:3001/api/v1/reports', {
+      const res = await fetch(`${API_URL}/api/v1/reports`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../src/lib/config';
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -13,7 +14,7 @@ export default function CommunitiesPage() {
   useEffect(() => {
     const fetchCommunities = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/v1/communities');
+        const res = await fetch(`${API_URL}/api/v1/communities`);
         if (!res.ok) {
           throw new Error('Failed to load communities');
         }

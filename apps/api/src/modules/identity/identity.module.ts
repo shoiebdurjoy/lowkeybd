@@ -19,16 +19,18 @@ import { MailerModule } from '@nestjs-modules/mailer';
       inject: [ConfigService],
     }),
     MailerModule.forRootAsync({
-      useFactory: () => ({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
         transport: {
-          host: '127.0.0.1',
-          port: 1025,
+          host: configService.get<string>('SMTP_HOST', '127.0.0.1'),
+          port: configService.get<number>('SMTP_PORT', 1025),
           ignoreTLS: true,
         },
         defaults: {
           from: '"No Reply" <noreply@lowkeybd.com>',
         },
       }),
+      inject: [ConfigService],
     }),
   ],
   controllers: [AuthController],

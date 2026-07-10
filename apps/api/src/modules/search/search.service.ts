@@ -33,13 +33,12 @@ export class SearchService implements OnModuleInit {
     const host = process.env.MEILISEARCH_HOST || 'http://localhost:7700';
     const apiKey = process.env.MEILISEARCH_API_KEY || 'masterKey123!';
     this.client = new Meilisearch({ host, apiKey });
+    this.postsIndex = this.client.index('posts');
+    this.communitiesIndex = this.client.index('communities');
   }
 
   async onModuleInit() {
     try {
-      this.postsIndex = this.client.index('posts');
-      this.communitiesIndex = this.client.index('communities');
-
       // Configure settings for posts
       await this.postsIndex.updateSettings({
         searchableAttributes: [

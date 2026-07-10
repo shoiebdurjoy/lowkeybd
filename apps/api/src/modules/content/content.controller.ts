@@ -9,6 +9,7 @@ import {
   Request,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { ContentService } from './content.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -16,6 +17,8 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Public } from '../../common/decorators/public.decorator';
+import { EmailVerifiedGuard } from '../../common/guards/email-verified.guard';
+import { PostRestrictionGuard } from '../../common/guards/post-restriction.guard';
 
 interface RequestWithUser {
   user: {
@@ -36,6 +39,7 @@ export class ContentController {
     return this.contentService.getGlobalFeed();
   }
 
+  @UseGuards(EmailVerifiedGuard, PostRestrictionGuard)
   @Post('posts')
   createPost(@Request() req: RequestWithUser, @Body() dto: CreatePostDto) {
     return this.contentService.createPost(req.user.userId, dto);
@@ -48,6 +52,7 @@ export class ContentController {
     return this.contentService.getPost(id, userId);
   }
 
+  @UseGuards(EmailVerifiedGuard)
   @Patch('posts/:id')
   updatePost(
     @Request() req: RequestWithUser,
@@ -57,6 +62,7 @@ export class ContentController {
     return this.contentService.updatePost(id, req.user.userId, dto);
   }
 
+  @UseGuards(EmailVerifiedGuard)
   @Delete('posts/:id')
   @HttpCode(HttpStatus.OK)
   deletePost(@Request() req: RequestWithUser, @Param('id') id: string) {
@@ -94,6 +100,7 @@ export class ContentController {
 
   // ---- COMMENTS ----
 
+  @UseGuards(EmailVerifiedGuard)
   @Post('posts/:id/comments')
   createComment(
     @Request() req: RequestWithUser,
@@ -103,6 +110,7 @@ export class ContentController {
     return this.contentService.createComment(postId, req.user.userId, dto);
   }
 
+  @UseGuards(EmailVerifiedGuard)
   @Patch('comments/:id')
   updateComment(
     @Request() req: RequestWithUser,
@@ -112,6 +120,7 @@ export class ContentController {
     return this.contentService.updateComment(id, req.user.userId, dto);
   }
 
+  @UseGuards(EmailVerifiedGuard)
   @Delete('comments/:id')
   @HttpCode(HttpStatus.OK)
   deleteComment(@Request() req: RequestWithUser, @Param('id') id: string) {

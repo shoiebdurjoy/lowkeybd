@@ -1,4 +1,5 @@
 'use client';
+import { API_URL } from '../../src/lib/config';
 
 import React, { useEffect, useState } from 'react';
 
@@ -21,7 +22,7 @@ export default function AdminOverviewPage() {
     const fetchOverview = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const res = await fetch('http://localhost:3001/api/v1/admin/overview', {
+        const res = await fetch(`${API_URL}/api/v1/admin/overview`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error('Failed to fetch overview');
