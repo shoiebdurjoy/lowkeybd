@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
+import { JwtService } from '@nestjs/jwt';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
@@ -17,8 +18,16 @@ describe('AppController (e2e)', () => {
   });
 
   it('/ (GET)', () => {
+    const jwtService = app.get(JwtService);
+    const token = jwtService.sign({
+      sub: 'e2e-user',
+      role: 'USER',
+      isVerified: true,
+    });
+
     return request(app.getHttpServer())
       .get('/')
+      .set('Authorization', `Bearer ${token}`)
       .expect(200)
       .expect('Hello World!');
   });

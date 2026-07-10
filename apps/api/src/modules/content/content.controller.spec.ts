@@ -3,6 +3,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ContentController } from './content.controller';
 import { ContentService } from './content.service';
 
+import { PrismaService } from '../../common/database/prisma.service';
+
 describe('ContentController', () => {
   let controller: ContentController;
   let service: ContentService;
@@ -26,6 +28,17 @@ describe('ContentController', () => {
         {
           provide: ContentService,
           useValue: mockContentService,
+        },
+        {
+          provide: PrismaService,
+          useValue: {
+            userRestriction: {
+              findFirst: jest.fn().mockResolvedValue(null),
+            },
+            user: {
+              findUnique: jest.fn().mockResolvedValue({ isVerified: true }),
+            },
+          },
         },
       ],
     }).compile();

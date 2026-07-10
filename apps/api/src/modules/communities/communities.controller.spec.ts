@@ -3,6 +3,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CommunitiesController } from './communities.controller';
 import { CommunitiesService } from './communities.service';
 
+import { PrismaService } from '../../common/database/prisma.service';
+
 describe('CommunitiesController', () => {
   let controller: CommunitiesController;
   let service: CommunitiesService;
@@ -24,6 +26,17 @@ describe('CommunitiesController', () => {
         {
           provide: CommunitiesService,
           useValue: mockCommunitiesService,
+        },
+        {
+          provide: PrismaService,
+          useValue: {
+            userRestriction: {
+              findFirst: jest.fn().mockResolvedValue(null),
+            },
+            user: {
+              findUnique: jest.fn().mockResolvedValue({ isVerified: true }),
+            },
+          },
         },
       ],
     }).compile();
